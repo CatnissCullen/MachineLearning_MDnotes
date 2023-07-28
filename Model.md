@@ -71,17 +71,20 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ***预测结果不好（准确度/ 损失值）但训练结果更好 —— 过拟合***
 
+### Early Stopping
+
+准备验证集，一边更新参数一边用验证集求误差：
+
+-   以验证集误差小于某阈值或更新多少次后不再出现更小值为 early stopping 标志；
+-   以验证集误差在多少次后不再小于等于训练集误差为标志。
+
+期间保留<u>使验证集误差最小</u>的参数直到最后。
+
 ### Dropout
 
 ### L2 Regularization (Weight-decay)
 
 See [Loss Function](D:\CAMPUS\AI\MachineLearning\LossFunction.md)
-
-### Momentum
-
-### Auto Learning Rate
-
-See <u>**Adam**</u>
 
 ### (In Classification) Weaken Features of a Each Class
 

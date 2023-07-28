@@ -20,6 +20,8 @@
 
 ## Adam
 
+<u>***（also see goodnotes）***</u>
+
 Adam（Adaptive Moment Estimation）是一种常用的深度学习优化算法，由Diederik P. Kingma和Jimmy Lei Ba在2015年的论文"Adam: A Method for Stochastic Optimization"中提出。
 
 Adam结合了两种其他的优化算法的优点：RMSProp（Root Mean Square Propagation）和Momentum。RMSProp算法为每个参数保持一个单独的学习率，该学习率是根据参数的最近梯度的平均值来调整的；而Momentum算法则是在更新参数时考虑上一次梯度的方向，从而加速学习过程并降低震荡。
@@ -58,6 +60,18 @@ Adam优化器和梯度下降（包括批量梯度下降，随机梯度下降，�
 综上，当面对的问题较简单，或者你希望能够找到全局最优解时，可以考虑使用梯度下降。但在深度学习中，大多数优化问题都是非凸的，并且可能存在大量的参数和稀疏的梯度，此时使用Adam优化器通常会取得更好的效果。
 
 
+
+## How to Escape Local Minima????????
+
+### SGD has a BETTER CHANCE
+
+### Momentum
+
+### Start from Multiple Initials and Train Multiple times then pick the Finest
+
+### Simulated Annealing
+
+### Genetic Algorithms
 
 
 

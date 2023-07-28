@@ -1,4 +1,4 @@
-# Model (forward passing/ feed forward)
+# Model (forward pass)
 
 ## Hyper-Parameters
 
@@ -21,7 +21,7 @@
 
 2.  **Variance（方差）**：方差是指模型预测的变化性或离散程度，即同样大小的不同训练集训练出的模型的预测结果的变化。如果模型对训练数据的小变动非常敏感，那么模型就有高方差，这通常会导致过拟合（overfitting），即模型在训练集上表现很好，但在测试集（即未见过的数据）上表现差。
 
-    <img src="image-20230724174527318.png" alt="image-20230724174527318" style="zoom:50%;" />
+    <img src="images/image-20230724174527318.png" alt="image-20230724174527318" style="zoom:50%;" />
 
     *（$\sigma$的一阶矩是有偏估计）*
 
@@ -137,7 +137,7 @@ class My_Model(nn.Module):
 
 ****
 
-### Basic DNN (fully connected)
+### Basic DNN (fully connected/ multi-layer feedforward NN) 
 
 ```python
 class My_Model(nn.Module):  # derived from build-in class "nn.Model"

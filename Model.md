@@ -167,6 +167,7 @@ class My_Model(nn.Module):  # derived from build-in class "nn.Model"
 
 -   ***从网络内部结构改变模型性能***
 -   图像数据（矩阵）常用
+-   需要添加 **Spatial Transformer Layers** 
 
 **简化网络使得非全连接，以减少网络层权重（参数）数，以削弱网络的特征敏感度，防止过拟合**
 

@@ -67,6 +67,8 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 <img src="images/image-20230724234749795.png" alt="image-20230724234749795" style="zoom: 33%;" />
 
+
+
 ## Deal With Over-fitting
 
 ***预测结果不好（准确度/ 损失值）但训练结果更好 —— 过拟合***
@@ -82,9 +84,21 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ### Dropout
 
+类似决策树的剪枝，但 Dropout 一般是随机舍去神经元，剪枝是经泛化性能的比较后减去决策分支。
+
+### Maximize the Margin + Soft Margin
+
+在分类问题中，最大化有训练集学得的划分超平面两侧的间隔（参考《机器学习》支持向量机），并且允许部分训练数据出错，即落入间隔内而不在硬间隔外部的严格分类区域（软化间隔）。
+
+### Support Vector Regression (SVR)
+
+在回归问题中，容忍落在间隔带内的出错数据，不计算其误差到 Loss ，即给 Loss Function 添加一个不敏感损失函数项，类似正则化（参考《机器学习》支持向量机）。
+
 ### L2 Regularization (Weight-decay)
 
 See [Loss Function](D:\CAMPUS\AI\MachineLearning\LossFunction.md)
+
+***正则项本质上是支持向量机的最大化间隔法产生的，参考《机器学习》p122,123,133*** 
 
 ### (In Classification) Weaken Features of a Each Class
 
@@ -93,6 +107,8 @@ See [Loss Function](D:\CAMPUS\AI\MachineLearning\LossFunction.md)
 ### Simplify Network Structure to Cut Down Sensitivity of  Features' Alternation
 
 See **<u>CNN</u>**
+
+
 
 ## Coding Tips
 
@@ -113,6 +129,10 @@ See **<u>CNN</u>**
 3.  Stacking：在Stacking中，我们使用多个模型来训练数据，然后再用一个新的模型（叫做元模型或者二级模型）来预测这些模型的预测结果。
 
 在许多机器学习竞赛中，集成学习被证明是一种非常有效的方法，因为它可以**减少过拟合，增加模型的泛化能力，从而提高预测性能**。
+
+
+
+
 
 
 

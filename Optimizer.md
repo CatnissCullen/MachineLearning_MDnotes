@@ -40,7 +40,7 @@
 
 ## Adam
 
-<u>***（also see goodnotes）***</u>
+<u>***（see also goodnotes）***</u>
 
 Adam（Adaptive Moment Estimation）是一种常用的深度学习优化算法，由Diederik P. Kingma和Jimmy Lei Ba在2015年的论文"Adam: A Method for Stochastic Optimization"中提出。
 
@@ -78,6 +78,20 @@ Adam优化器和梯度下降（包括批量梯度下降，随机梯度下降，�
     -   尽管在实践中效果较好，但理论上并没有像梯度下降那样可以保证找到全局最优解的性质。
 
 综上，当面对的问题较简单，或者你希望能够找到全局最优解时，可以考虑使用梯度下降。但在深度学习中，大多数优化问题都是非凸的，并且可能存在大量的参数和稀疏的梯度，此时使用Adam优化器通常会取得更好的效果。
+
+`torch.optim.Adam`和`torch.optim.AdamW`都是一种基于梯度下降的优化算法，但是他们在**权重衰减上的处理不同**。
+
+1.  `torch.optim.Adam`是原始的Adam优化器，它在计算梯度时，将权重衰减作为一部分包含在内。这意味着权重衰减是在梯度计算完成后应用的，这可能会导致学习率调整和权重衰减的相互干扰。
+2.  `torch.optim.AdamW`是在ICLR 2019中提出的一种改进的Adam优化器，其将权重衰减与梯度计算分开处理。这可以**减少学习率调整和权重衰减之间的干扰**，从而提供更好的优化性能。
+
+关于参数，`torch.optim.Adam`和`torch.optim.AdamW`的参数大部分相同，包括：
+
+-   `params` (iterable): 待优化的参数或定义了参数组的dict
+-   `lr` (float, optional): 初始学习率（默认值：1e-3）
+-   `betas` (Tuple[float, float], optional): 用于计算梯度和平方梯度的运行平均值的系数（默认值：(0.9, 0.999)）
+-   `eps` (float, optional): 为了增加数值计算的稳定性而加到分母里的项（默认值：1e-8）
+-   `weight_decay` (float, optional): 权重衰减（L2正则化）（默认值：0）
+-   `amsgrad` (boolean, optional): 是否使用AMSGrad变种（默认值：False）
 
 
 

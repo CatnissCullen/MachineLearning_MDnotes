@@ -31,3 +31,16 @@ with RL: https://arxiv.org/abs/1511.06732
 
 
 
+## 3D Understanding
+
+Understand every pixel in an image, reconstructing the entire world.
+
+(Semantic Segmentation, Perceptual Grouping)
+
+
+
+## Write a Story Describing an Image
+
+Make machine generate a reasonable story from an image based on its understanding. (visual genome)
+
+![image-20230803150831468](images/image-20230803150831468.png)

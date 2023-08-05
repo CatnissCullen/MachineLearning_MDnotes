@@ -9,7 +9,7 @@
 ### Image
 
 -   在输入模型前需要设置 Spatial Transformer Layer 学习如何将图片大小和方向统一（see **<u>Spatial Transformer Layer</u>**）
--   看作 3 维矩阵（RGB Channels、长度、宽度），可拉直成向量计算。
+-   看作 3 维矩阵（RGB Channels、长度、宽度）输入CNN，输入全连接网络前拉直（flatten）成一维向量。
 
 （具体见卷积神经网络 goodnotes）
 
@@ -99,7 +99,9 @@
 
 
 
-## Spatial Transformer Layer ( for images)
+## Processing Layers within the Model
+
+### Spatial Transformer Layer ( for images)
 
 ***使得输入CNN的图片数据等大同向**（CNN不能兼容不等大同向的数据）*
 
@@ -111,6 +113,43 @@ $$
 
 该种 Layer <u>**加入总模型中一起进行 GD 优化（直接视为模型的一部分）**，且可插入模型任意所需位置</u>。
 
+### Feature Normalization Layer
+
+用于增加模型泛化性能（平滑化 Loss 曲面不必要的、阻碍优化的隆起高地，因为 normalization 把属性值都归一化了，变小了）
+
+#### Batch Normalization
+
+`torch.nn.BatchNorm2d`是PyTorch中的二维批量归一化（Batch Normalization）层。这个层的主要作用是对每个mini-batch的输入数据进行归一化处理，以加速深度网络模型的训练并且提高模型的泛化能力。
+
+通常被用在卷积神经网络（CNN）和全连接网络（FCN）的训练中。
+
+**作用**：
+
+1.  **深度神经网络训练**：在深度神经网络中，每一层的输入数据分布都会因为上一层参数的更新而改变，这种现象被称为“内部协变量转移”（Internal Covariate Shift）。这会导致网络需要更长的时间去适应这种变化，从而减慢训练速度。通过使用批量归一化，可以将每一层的输入数据强制转化为均值为0，方差为1的标准正态分布，减少内部协变量转移的影响，加快训练速度。
+2.  **解决梯度消失和梯度爆炸问题**：在深度神经网络中，当数据的分布不均匀时，容易导致梯度消失和梯度爆炸的问题。通过批量归一化，可以调整数据的分布，缓解这一问题。
+3.  **减少过拟合**：批量归一化在一定程度上具有正则化的效果，可以减少模型的过拟合现象。这是因为在训练过程中，每个mini-batch的数据都有自己的均值和方差，这增加了模型的噪声，相当于添加了一种形式的正则化。
+4.  **允许使用更高的学习率**：批量归一化有助于网络的收敛，并且允许我们使用更大的学习率，这可以进一步加快训练速度。
+
+可以插入到网络的任何部分，但**通常放在非线性变换（如ReLU激活函数）之前**。
+
+具体参数含义如下：
+
+1.  `num_features`：输入数据的通道数量。对于二维卷积层的输出数据，这通常就是卷积层的输出通道数。
+2.  `eps`：这是一个用于保证数值稳定性的小常数，防止分母为零。默认值是1e-05。
+3.  `momentum`：这是用于计算运行中的平均值和方差的动量。默认值是0.1。
+4.  `affine`：布尔值，当设为True时，会为此层添加可学习的仿射变换参数。这意味着此层将有可学习的缩放参数（weight）和偏移参数（bias）。默认值是True。
+5.  `track_running_stats`：当设为True时，该层将会保持运行中的平均值和方差的统计数据，用于在测试阶段进行批量归一化。当False时，只在每个mini-batch上计算统计数据，这在样本量较少的情况下可能会导致不准确。默认值是True。
+
+例：
+
+```python
+pythonCopy codem = nn.BatchNorm2d(100)
+input = torch.randn(20, 100, 35, 45)
+output = m(input)
+```
+
+在这个例子中，`nn.BatchNorm2d(100)`定义了一个BatchNorm2d层，输入数据的通道数（num_features）是100。然后，它将对一个形状为[20, 100, 35, 45]的输入数据进行批量归一化处理。
+
 
 
 ## Coding Implementation
@@ -119,9 +158,9 @@ $$
 
 ### `torchvision.transforms`
 
-*用来做<u>图像数据增强</u>等**人工图像预处理**的库（不能做 SPL！！SPL 属于一种要自己搭建的模型内部的自主学习网络层）* 
-
-==与 Transformer 模型无关！！！！！==
+-   *用来做<u>图像数据增强</u>等**人工图像预处理**的库*
+-   **不能做 SPL！！SPL 属于一种要自己搭建的模型内部的自主学习网络层* 
+-   ==与 Transformer 模型无关！！！！！==
 
 `torchvison.transforms` 包含了一些图像预处理操作，**这些操作可以使用`torchvison.transforms.Compose` 连在一起进行串行操作**（类似 `.nn.Sequential`用来串接网络层；`.nn.Sequential` 也能脚本化图像预处理操作，见 [Transforms Scripting](https://pytorch.org/vision/stable/transforms.html#transforms-scriptability)）。
 
@@ -153,15 +192,13 @@ __all__ = ["Compose", "ToTensor", "ToPILImage", "Normalize", "Resize", "Scale", 
 
 ```python
 My_Transforms = transforms.Compose([
-    # Resize the image into a fixed shape (height = width = 128)
-    transforms.Resize((size, size)),  # simply resizing to manually fixed size
+    transforms.Resize((size, size)),  # simply resizing the image to manually fixed size
     # You may add some transforms here.
-    # ToTensor() should be the last one of the transforms.
-    transforms.ToTensor(),  # simply transforming into Tensor (usually MUST DO so!!)
+    transforms.ToTensor()  # simply transforming into Tensor (usually MUST be the last one of the transforms!!)
 ])
 ```
 
-关于 transforms 函数：
+关于 `torchvision.transforms.functional` （transforms **函数**）：
 
 `torchvision.transforms.functional` 模块是一组函数，它们对图像进行低级变换。**这些函数与`torchvision.transforms`模块中的类相对应，但以函数形式提供**。
 

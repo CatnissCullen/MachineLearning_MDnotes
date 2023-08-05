@@ -1,5 +1,40 @@
 # Model (forward pass)
 
+
+
+## Quick Understanding of Deep Learning
+
+-   Teacher: Us
+-   Student: Machine (Computer)
+
+-   **Hints before learning:** 
+
+    a Function with Parameters to be Learnt & some Hyper-parameters (MANUALLY PROVIDED) => $Building\ the\ Model$
+
+-   **Data for learning:** 
+
+    a Training Set => $Train\ Time$
+
+-   **Notes summarizing the learning:** 
+
+    the Function with learned Parameters => $Learnt\ Model$
+
+    ==To come up with the right Function is the key stage of Deep Learning!!!==
+
+-   **Data for checking learning effect:** 
+
+    a Validation Set => $Validation\ Time$
+
+-   **Consolidate the knowledge:** 
+
+    the Training-Validation Loop 
+
+-   **==Data for the FINAL EXAM:==** 
+
+    ==a Testing Set unseen through any stages before => $Test\ Time$==
+
+
+
 ## Hyper-Parameters
 
 -   **(Initial) Learning Rate (set in Optimizer)** 
@@ -75,7 +110,7 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ### Early Stopping
 
-准备验证集，一边更新参数一边用验证集求误差：
+准备验证集（一般是所有已知数据**训练:验证=8:2**），一边训练以更新参数一边在每个epoch结束用验证集求误差（训练误差也求出来，用于比较观察是否过拟合）：
 
 -   以验证集误差小于某阈值或更新多少次后不再出现更小值为 early stopping 标志；
 -   以验证集误差在多少次后不再小于等于训练集误差为标志。
@@ -85,6 +120,10 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 ### Dropout
 
 类似决策树的剪枝，但 Dropout 一般是随机舍去神经元，剪枝是经泛化性能的比较后减去决策分支。
+
+### Shuffle
+
+每个epoch开始前对batches洗牌（在 `DataLoader` 处设置，训练集和验证集开启，测试集关闭）
 
 ### Maximize the Margin + Soft Margin
 
@@ -108,13 +147,49 @@ See [Loss Function](D:\CAMPUS\AI\MachineLearning\LossFunction.md)
 
 See **<u>CNN</u>**
 
+### Batch Normalization
+
+See  [DataProcessing](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\DataProcessing.md)---**<u>Batch Normalization</u>**
+
+### Cross Validation, K-Fold
+
 
 
 ## Coding Tips
 
 -   **`torch.nn`** 内置各种NN模块，可作为完整模型架构或隐藏层，也可自定义**`torch.nn.Module`** 的派生类作为模型类，里面使用内置NN模块建立模型架构（用**`torch.nn.sequence`**）
+
 -   **`torch.nn.Module`** 的可用方法（含必须实现的）见 **[Method of Class "Module"](https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module)**
+
 -   **`torch.nn`**内置的NN模块（Layers）见 [**Build-in NN Model (Layers Block)**](https://pytorch.org/docs/stable/nn.html)
+
+-   Training框架：
+
+    ```python
+    for inputs, targets in dataloader:
+        optimizer.zero_grad()  # 清零梯度
+        outputs = model(inputs)  # 正向传播
+        loss = criterion(outputs, targets)  # 计算损失
+        loss.backward()  # 反向传播，计算梯度
+        optimizer.step()  # 更新参数
+    ```
+
+
+
+## Stable Training
+
+```python
+# Clip the gradient norms for stable training.
+        grad_norm = nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)
+```
+
+`nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)`这一行代码用于梯度裁剪，其目的是为了防止在神经网络训练过程中出现"梯度爆炸"的问题。
+
+梯度爆炸是指在训练过程中，模型的参数的梯度变得非常大，以至于更新步长过大，导致模型无法收敛，甚至结果溢出。当计算出的梯度大于某个设定的最大值（在这里是10）时，这个函数将会按比例缩小梯度，使得其不超过这个最大值，从而避免梯度爆炸。
+
+`grad_norm = nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)`这行代码会返回所有模型参数梯度的L2范数。
+
+梯度裁剪是很常见的在训练深度学习模型，特别是在训练深度神经网络和循环神经网络（RNN）时，用于保持模型的稳定性。
 
 
 
@@ -124,15 +199,11 @@ See **<u>CNN</u>**
 
 主要的集成方法有：
 
-1.  Bagging：Bootstrap Aggregating的缩写。它通过从训练数据中有放回地随机抽样来生成不同的训练集，然后在每个训练集上训练一个模型。最后，所有模型的预测结果通过投票（分类问题）或平均（回归问题）来产生最终预测。随机森林就是一个典型的Bagging的例子。
-2.  Boosting：Boosting方法是一种迭代的策略，其中新模型的训练依赖于之前模型的性能。每个新模型都试图修正之前模型的错误。最著名的Boosting算法有AdaBoost和梯度提升。
-3.  Stacking：在Stacking中，我们使用多个模型来训练数据，然后再用一个新的模型（叫做元模型或者二级模型）来预测这些模型的预测结果。
+1.  Bagging（Bootstrap Aggregating）：通过从训练数据中有放回地随机抽样来生成不同的训练集，然后在每个训练集上训练一个模型。最后，所有模型的预测结果通过投票（分类问题）或平均（回归问题）来产生最终预测。随机森林就是一个典型的Bagging的例子。
+2.  Boosting：一种迭代的策略，其中新模型的训练依赖于之前模型的性能。每个新模型都试图修正之前模型的错误。最著名的Boosting算法有AdaBoost和梯度提升。
+3.  Stacking：使用多个模型来训练数据，然后再用一个新的模型（叫做元模型或者二级模型）来预测这些模型的预测结果。
 
 在许多机器学习竞赛中，集成学习被证明是一种非常有效的方法，因为它可以**减少过拟合，增加模型的泛化能力，从而提高预测性能**。
-
-
-
-
 
 
 
@@ -160,7 +231,7 @@ class My_Model(nn.Module):
 
 ****
 
-### Basic DNN (fully connected/ multi-layer feedforward NN) 
+### Basic fully connected NN (FCN/ multi-layer feedforward NN) 
 
 ```python
 class My_Model(nn.Module):  # derived from build-in class "nn.Model"
@@ -191,8 +262,69 @@ class My_Model(nn.Module):  # derived from build-in class "nn.Model"
 -   ***从网络内部结构改变模型性能***
 -   图像数据（矩阵）常用
 -   需要添加 **Spatial Transformer Layers** 
+-   据具体问题考虑是否使用 **Pooling**（不是所有数据都能用！！一般图像可以）
 
 **简化网络使得非全连接，以减少网络层权重（参数）数，以削弱网络的特征敏感度，防止过拟合**
+
+**`torch.nn.Conv2d`** 是 PyTorch 提供的二维卷积操作。卷积在图像处理和计算机视觉中非常重要，特别是在卷积神经网络中。
+
+**参数**：
+
+-   `in_channels`: 输入数据的通道数。例如，对于彩色图像，`in_channels` 为3（分别对应红、绿、蓝三种颜色）；对于灰度图像，`in_channels` 为1。
+-   `out_channels`: 卷积产生的特征图（Feature Maps）的数量。这个参数可以被视为学习特征的数量。
+-   `kernel_size`: 卷积核的尺寸，可以是单个整数或一个包含两个整数的元组（分别表示高和宽）。卷积核是用于扫描图像的滑动窗口。
+-   `stride`: 卷积核移动的步长，可以是单个整数或一个包含两个整数的元组。步长控制了卷积核在输入图像上滑动的速度。
+-   `padding`: 在输入数据的周围添加的零的层数。可以是单个整数或一个包含两个整数的元组。补零可以保证输出特征图的尺寸不变或者控制输出特征图的尺寸。
+-   `dilation`: 卷积核元素之间的间距。它可以被用于控制卷积核覆盖的空间尺寸，而不改变卷积核中的元素数量。
+-   `groups`: 控制输入和输出之间的连接。默认情况下，groups=1，意味着每个输入通道与每个输出通道都连接。如果groups=2，那么前一半的输入通道与前一半的输出通道连接，后一半同理。当`groups=in_channels`和`out_channels`时，卷积操作就变成了深度卷积。
+-   `bias`: 如果设置为True，那么向卷积添加偏置。默认为True。
+
+```python
+class My_Model(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        # torch.nn.MaxPool2d(kernel_size, stride, padding)
+        # input_size: [3, 128, 128]
+        self.cnn_pool = nn.Sequential(  # CNN
+            nn.Conv2d(3, 64, 3, 1, 1),  # output_size: [64, 128, 128]
+            nn.BatchNorm2d(64),  
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),  # Pooling to: [64, 64, 64]
+
+            nn.Conv2d(64, 128, 3, 1, 1),  # output_size: [128, 64, 64]
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),  # Pooling to: [128, 32, 32]
+
+            nn.Conv2d(128, 256, 3, 1, 1),  # output_size: [256, 32, 32]
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),  # Pooling to: [256, 16, 16]
+
+            nn.Conv2d(256, 512, 3, 1, 1),  # output_size: [512, 16, 16]
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),  # Pooling to: [512, 8, 8]
+
+            nn.Conv2d(512, 512, 3, 1, 1),  # output_size: [512, 8, 8]
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2, 0),  # Pooling to: [512, 4, 4]
+        ) 
+        self.fullc = nn.Sequential(  # Fully-connected NN
+            nn.Linear(512 * 4 * 4, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 11)
+        )
+
+    def forward(self, x):
+        out = self.cnn_pool(x)
+        out = out.view(out.size()[0], -1)  # 展平操作（Flatten）：常常在卷积层和全连接层之间进行，因为全连接层需要的输入是一维的
+        return self.fullc(out)
+```
 
 ****
 
@@ -250,6 +382,14 @@ class My_Model(nn.Module):
 总的来说，自注意力机制在计算机视觉中的应用是一种很有前景的研究方向，它能帮助模型关注到图像中最重要的部分，从而提高模型的性能。
 
 **Self-attention下游应用：https://www.youtube.com/watch?v=yHoAq1IT_og （包括Transformer）**
+
+****
+
+### CNN & RNN
+
+==**CNN常用作图像分类，RNN常用作文本生成，两者结合可以做 Image Captioning：**==
+
+![image-20230805110434586](images/image-20230805110434586.png)
 
 ****
 
@@ -372,14 +512,14 @@ https://youtu.be/wulqhgnDr7E
 
 
 
-## 2 Modes of Model (nn.Module)
+## 2 Modes of Model (nn.Module) & ` with torch.no_grad()`:
 
 ****
 
-|                                                | `.train()` | `.eval()` |
-| :--------------------------------------------: | :--------: | :-------: |
-| 在`.forward()`时提前做好求梯度的预备计算并存储 |     ✔️      |     ❌     |
-|           自动调整学习率（如果可以）           |     ✔️      |     ❌     |
-|        据概率（给定参数）随机关闭神经元        |     ✔️      |     ❌     |
-|                                                |            |           |
+|                                                              |     训练时`.train()`      |            验证/ 测试时`.eval()`             |
+| :----------------------------------------------------------: | :-----------------------: | :------------------------------------------: |
+| 添加**`with torch.no_grad():`**禁止在`.forward()`时提前做好求梯度的预备计算并存储（`.forward()`默认内置这一操作） |             ❌             |       ✔️（节省存储且加速`.forward()`）        |
+|                  自动调整学习率（如果可以）                  |             ✔️             |                      ❌                       |
+|         据概率（给定参数）随机关闭神经元（dropout）          |             ✔️             |                      ❌                       |
+|              `.BatchNorm2d`（如果模型中设置了）              | 计算每个batch的均值和方差 | 使用在训练过程中计算得到的移动平均均值和方差 |
 

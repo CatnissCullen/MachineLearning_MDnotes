@@ -5,6 +5,7 @@
 ## Quick Understanding of Deep Learning
 
 -   Teacher: Us
+
 -   Student: Machine (Computer)
 
 -   **Hints before learning:** 
@@ -25,9 +26,13 @@
 
     a Validation Set => $Validation\ Time$
 
+-   **Errors Recording:**
+
+    Loss Function => *We tell our machine how bad the model is with this (may include <u>penalty</u> in case of over-fitting T-T)* 
+
 -   **Consolidate the knowledge:** 
 
-    the Training-Validation Loop 
+    the Training-Validation Loop => $Optimization$  
 
 -   **==Data for the FINAL EXAM:==** 
 

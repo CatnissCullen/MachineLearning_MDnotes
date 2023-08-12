@@ -63,8 +63,7 @@ Loss = torch.nn.CrossEntropy()  # 已经包含Softmax（自动将一层Softmax�
 **合页损失函数（Hinge Loss）**的定义如下：
 $$
 对于单个训练样本点：\quad
-loss=max(0,1−(y′∗y))，\\
-总损失\ Hinge\ Loss\ 即各\ loss\ 求和。
+loss=max(0,1−(y′∗y))
 $$
 其中“$y'$”表示<u>当前学得的</u>**分类器模型的输出**：
 $$
@@ -93,6 +92,16 @@ $1−(y′∗y)$ 中的 $1$ 为**距离因子**，非0即可，与实际的最�
 >   ('$S_j$' is the score of class_j for sample_i; '$S_{yi}$' is the score of the ground truth label_y of sample_i from the current classifier)
 >
 >   **Margin:** $S_{yi}-S_j$
+>
+>   $S_{yi}$ need to be higher than $S_j$ by some safety margin. Simply  ≥ is not enough.
+
+### 平方合页损失
+
+将函数间隔值平方代入线性合页损失函数。
+
+![v2-5a06117632b3e2dabed408c5b2b6e405_1440w](images/v2-5a06117632b3e2dabed408c5b2b6e405_1440w.jpg)
+
+与常规合页损失函数相比，平方合页损失函数对离群值的惩罚更严厉，而对小损失值（函数间隔小于1）的惩罚减小（平方比原值更小）。
 
 
 

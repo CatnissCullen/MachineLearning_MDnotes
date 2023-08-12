@@ -52,6 +52,50 @@ Loss = torch.nn.CrossEntropy()  # 已经包含Softmax（自动将一层Softmax�
 
 
 
+## Hinge Loss
+
+<img src="images/statistical_learning_7.6.png" alt="statistical_learning_7.6" style="zoom: 67%;" />
+
+<img src="images/v2-3c6aa9626ee8e4609b0d7c5712baf624_r.jpg" alt="v2-3c6aa9626ee8e4609b0d7c5712baf624_r" style="zoom:67%;" />
+
+### 对于二元分类
+
+**合页损失函数（Hinge Loss）**的定义如下：
+$$
+对于单个训练样本点：\quad
+loss=max(0,1−(y′∗y))，\\
+总损失\ Hinge\ Loss\ 即各\ loss\ 求和。
+$$
+其中“$y'$”表示<u>当前学得的</u>**分类器模型的输出**：
+$$
+y′=b+w1\cdot x1+w2\cdot x2+…wn\cdot xn
+$$
+“$y$”表示**真标签（ground truth label）**，<u>值为 -1 或 +1</u>；
+
+$y′∗y$ 表示**函数间隔**，即该训练样本点和**决策边界（$W\cdot x+b=0$）**的**实际距离**；
+
+>   *<u>软间隔（Soft Margin）</u>* --- 允许少数训练样本点在**安全间隔（Safe Margin）** 内部，优化时需要最小化这样的样本数
+>
+>   <img src="images/v2-a04fdb43f41bd9e4fd06306558ab61f2_r.jpg" alt="v2-a04fdb43f41bd9e4fd06306558ab61f2_r" style="zoom:67%;" />
+>
+>   *<u>硬间隔（Hard Margin）</u>* --- 要求所有训练样本点均在**安全间隔（Safe Margin）** 外侧
+
+==**优化目标：**找到满足“软”或“硬”要求的**安全间隔**的**最大值**==
+
+***安全间隔也可理解为对刚好分类正确的结果的适度惩罚，刚好正确（在决策边界上）是不足够的，需要充分正确（和决策边界拉开一定距离）才是成功分类（对未见数据达到一定包容度）***
+
+$1−(y′∗y)$ 中的 $1$ 为**距离因子**，非0即可，与实际的最优距离无关，学得的 $W$ 和 $b$ 会随之按比例变化。
+
+### 对于多元分类
+
+>   <img src="images/image-20230812094317357.png" alt="image-20230812094317357" style="zoom: 67%;" />
+>
+>   ('$S_j$' is the score of class_j for sample_i; '$S_{yi}$' is the score of the ground truth label_y of sample_i from the current classifier)
+>
+>   **Margin:** $S_{yi}-S_j$
+
+
+
 ## To Prevent Overfitting: L2 Regularization
 
 L2正则化是一种常用的防止过拟合的技术，也被称为权重衰减。它的基本思想是通过在损失函数中添加一个额外的项来惩罚大的权重值，从而**防止模型过于复杂**。

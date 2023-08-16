@@ -28,7 +28,7 @@
 
 -   **Errors Recording:**
 
-    Loss Function => *We tell our machine how bad the model is with this (may include <u>penalty</u> in case of over-fitting T-T)* 
+    Loss Function => *We tell our machine how bad the model is with this (Usually include <u>penalty \<Regularization Loss></u> in case of over-fitting T-T; Encourage simpler model so it needs to overcome the Regularization to attain more complex model, which will be more robust than complex ones without penalty)* 
 
 -   **Consolidate the knowledge:** 
 
@@ -113,6 +113,8 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ***预测结果不好（准确度/ 损失值）但训练结果更好 —— 过拟合***
 
+![image-20230812120700025](images/image-20230812120700025.png)
+
 ### Early Stopping
 
 准备验证集（一般是所有已知数据**训练:验证=8:2**），一边训练以更新参数一边在每个epoch结束用验证集求误差（训练误差也求出来，用于比较观察是否过拟合）：
@@ -142,11 +144,15 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 See [Loss Function](D:\CAMPUS\AI\MachineLearning\LossFunction.md)
 
-***正则项本质上是支持向量机的最大化间隔法产生的，参考《机器学习》p122,123,133*** 
+***正则项本质上是支持向量机的最大化间隔法产生的，其表示的其实是划分超平面两侧安全间隔的总大小（待最大化），参考《机器学习》p122（侧栏笔记有推导）,123,133*** 
 
 ### (In Classification) Weaken Features of a Each Class
 
 估计各类别的分布时（建模时），**使它们拥有相同的某参数**，该参数<u>由各类别分别用对应训练集估计出的参数再对样本数**加权平均**得到</u>
+
+### L1 Regularization
+
+比 $L2$ 更鼓励 $W$ 为稀疏矩阵，正则项为 $W$ 的 $L1$ 距离
 
 ### Simplify Network Structure to Cut Down Sensitivity of  Features' Alternation
 
@@ -157,6 +163,8 @@ See **<u>CNN</u>**
 See  [DataProcessing](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\DataProcessing.md)---**<u>Batch Normalization</u>**
 
 ### Cross Validation, K-Fold
+
+
 
 
 
@@ -446,17 +454,41 @@ Transformer模型由于其强大的性能和灵活性，不仅在NLP中得到广
 
 ****
 
-### Generative
+### Generative Model
 
 ***（如何假设分布：多元特征样本则对训练集每类样本都分别设为一个高斯分布<可共用方差并共同计算似然函数>，无论是否是二元分类；单元特征样本且二元分布则直接对所有训练集设为一整个伯努利分布）***
 
 ****
 
-### Logistic Regression
+### Linear Classifier （即把 Linear Regression 的模型用来分类，把分类当线性回归做）
+
+$$
+\vec S_i = W\cdot \vec x_i\ +\ \vec b
+$$
+
+$\vec S_i$ 是第 i 个样本在各个类别中获得的分数组成的向量**（Unnormalized probabilities of Classes）**，$W$ 待学习的矩阵，$\vec b$ 是待学习的偏差向量，与具体训练集中不同类别的样本的数量差异有关（学习时将平衡这样的差异）。
+
+优化目标：使得真实label对应的类别获得的分数最高
+
+<u>**SVM** 使用的模型就是线性模型（寻找划分超平面）</u>
+
+****
+
+### Logistic Regression (Discriminative Model; Softmax Classifier)
 
 ***（不需要自己假设分布！！！）***
 
-和 Linear Regression 的区别仅在<u>**最终**输出时**多加一层 Softmax**</u>（这是 Softmax 作为生成概率分布的用途时的用法，<u>若是别的用途则在隐藏层也会加</u>！！！！sigmoid是特殊的sigmoid，二分类时直接用sigmoid；**Logit \<对数几率，log odds>** 狭义即指 sigmoid 的反函数，广义指<u>未经 Softmax 的输出</u>）
+<img src="images/image-20230812173316594.png" alt="image-20230812173316594" style="zoom:50%;" />
+
+<img src="images/image-20230812172514738.png" alt="image-20230812172514738" style="zoom: 50%;" />
+
+和 Linear Regression 的区别仅在<u>**最终**输出时**多加一层 Softmax**</u>（这是 Softmax 作为生成概率分布的用途时的用法，<u>若是别的用途则在隐藏层也会加</u>！！！！sigmoid是特殊的Softmax，二分类时直接用sigmoid；**Logit \<对数几率，log odds>** 狭义即指 sigmoid 的反函数，广义指<u>未经 Softmax 的输出</u>），用 Linear Classification 输出的分数生成 **Normalized probabilities of Classes**（属于 (0, 1)，取不到边界）
+
+添加 Softmax 后因为有了 (0, 1) 的上下界，高分数（向1挤压）会相较低分数（向0挤压）变得更高
+
+优化目标：使得真实label对应的类别获得的分数最高 => **即接近一（因为已经转化为概率分布了）**
+
+<img src="images/image-20230812172829902.png" alt="image-20230812172829902" style="zoom:50%;" />
 
 ```python
 class My_Model(nn.Module):

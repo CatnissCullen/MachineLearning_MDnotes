@@ -9,10 +9,12 @@
 ### Image
 
 -   以图片本身为sample，用数字编码命名图片作为label
--   在输入模型前需要设置 Spatial Transformer Layer 学习如何将图片大小和方向统一（see **<u>Spatial Transformer Layer</u>**）
--   看作 3 维矩阵（RGB Channels、长度、宽度）输入CNN，输入全连接网络前拉直（flatten）成一维向量。
 
-（具体见卷积神经网络 goodnotes）
+-   在输入模型前需要设置 Spatial Transformer Layer 学习如何将图片大小和方向统一（see **<u>Spatial Transformer Layer</u>**）
+
+-   看作 3 维矩阵（RGB Channels、长度、宽度）输入CNN，输入全连接网络前拉直（flatten）成一维向量（具体见卷积神经网络 goodnotes）
+
+    ![image-20230812220343429](image-20230812220343429.png)
 
 ### Audio
 
@@ -31,6 +33,144 @@
 在整个过程中，我们可以根据具体的应用需求，选择提取不同数量的MFCCs。
 
 可能并不适合以单个帧窗口为样本，于是可以用前后的多个帧窗口辅助对单个帧窗口的预测，称为**“污染”（Contamination）**。
+
+
+
+## Centering & Scaling for Feature Values
+
+***中心化 + 比例缩放 => 标准化***
+
+>   **Normalization** is a general term that refers to the process of transforming data **into a standard or common scale**. It's often used to describe various techniques that make data more comparable and interpretable by algorithms.
+>
+>   --- *GPT4*
+
+我的理解：把没有统一变动范围的各值，映射到一个度量范围一定的标尺的刻度上，具体度量范围？-> 不同标准化方法有不同的范围，范围的具体值要适应具体值集，因此由该值集本身的数字特征导出（区别于 $Softmax$ ！！）
+
+### Centering 目的
+
+1.  **Interpretability**: By centering the data, you shift the origin to the mean of the data. This can make the interpretation of coefficients in linear models more straightforward, as they now represent deviations from the mean rather than from 0.
+2.  **Numerical Stability**: Centering can improve the numerical stability of some algorithms, particularly those that involve matrix inversion. When features have very large values, the computations can become numerically unstable, leading to inaccurate results. Centering helps to mitigate this issue.
+3.  **Removing Multicollinearity**: In multiple regression, if you include interaction terms or polynomial terms, centering can help to reduce multicollinearity, making the estimates more stable and interpretable.
+4.  **Normalization Requirement**: Some machine learning algorithms, like Principal Component Analysis (PCA) and algorithms that use gradient descent, require the data to be centered to work properly. In PCA, centering ensures that the first principal component describes the direction of maximum variance. Without centering, the first component might instead correspond more closely to the mean of the data.
+5.  **Improving Convergence**: For optimization algorithms like gradient descent, centering can make the optimization landscape more symmetrical. This can lead to faster convergence to the minimum.
+6.  **Scale Invariance**: Centering can be a part of standardization (subtracting the mean and dividing by the standard deviation), which makes the algorithm scale-invariant. This means that multiplying a feature by a constant will not change the algorithm's behavior.
+7.  **Visual Understanding**: Centering can also make visualizations more interpretable, as the data is represented relative to its mean, which might be more intuitive, especially when comparing different datasets or features.
+
+### Scaling 目的
+
+1.  **Equal Influence**: Features with large magnitudes can disproportionately influence the model. Scaling ensures that all features have an equal chance to contribute.
+2.  **Algorithm Convergence**: Gradient-based optimization algorithms often converge faster when the features are on a similar scale.
+3.  **Distance-Based Models**: For models that rely on distances between data points (e.g., k-NN, SVM with RBF kernel), scaling is crucial as it ensures that all features contribute equally to the distance computation.
+4.  **Preprocessing for Regularization**: Regularization techniques apply penalties to the coefficients of the model. If the features are on different scales, the penalties will affect them differently.
+
+### 常用 Normalization
+
+以下 $X_i$ 的含义取决于具体应用目的：
+
+-   若是需要在同一数据点的不同属性值间比较，则标准化方向为数据点向量内（$X_i$ 为同一数据点不同属性的值，即整个数据集的矩阵中 $axis = 1$）
+
+-   若是宏观比较不同数据点（从模型整体的角度加工数据时），则标准化方向为各数据点之间（$X_i$ 为某种属性对于不同数据点的值，即整个数据集的矩阵中 $axis=0$）
+
+    >   $exp:$  In the case of images, this corresponds to computing a ***mean image*** <u>across the training images</u> and subtracting it from every image to get images...
+
+### *Z-score Normalization (Standardization)*
+
+-   Centering Method: Subtracting the mean ($μ$) of the feature.
+
+-   Scaling Method: Dividing by the standard deviation ($\sigma$)
+
+-   Result: The mean of the scaled feature is 0.
+
+-   Formula:
+    $$
+    X_i'=\frac{X_i-\mu}{\sigma}
+    $$
+
+### *Min-Max Normalization*
+
+-   Centering Method: Subtracting the $\min$ value of the feature.
+
+-   Scaling Method: Dividing by the <u>range</u>
+
+-   Result: The minimum value of the scaled feature is 0, and the data is scaled to a specific range, usually [0, 1].
+
+-   Formula:
+    $$
+    X_i'=\frac{X_i-\min}{\max-\min}
+    $$
+
+-   
+
+### *Robust Normalization*
+
+-   Centering Method: Subtracting the $median$ of the feature.
+
+-   Scaling Method: Dividing by the $IQR$
+
+-   Result: The $median$ of the scaled feature is 0, making it robust to outliers.
+
+-   Formula: 
+    $$
+    X_i'=\frac{X_i-medium}{IQR}
+    $$
+
+### *Mean Normalization*
+
+-   Centering Method: Subtracting the mean ($μ$) of the feature, similar to standardization
+
+-   Scaling Method: Dividing by the range instead of the standard deviation in standardization
+
+-   Result: The mean of the scaled feature is 0, and the data is scaled to a range of [-1, 1].
+
+-   Formula: 
+    $$
+    X_i'=\frac{X_i-\mu}{\max-\min}
+    $$
+
+-   
+
+### *Unit Vector Normalization*
+
+-   Centering Method: None
+
+-   Scaling Method: Dividing by a specific $norm$ ($||X_i||$) of the vector
+
+-   Result: This specific $norm$ of the vector is 1.
+
+-   Formula:
+    $$
+    X_i'=\frac{X_i}{||\vec X||}
+    $$
+
+
+
+## **Feature Representation**
+
+**Fancier Feature Vectors:**
+
+Can use **Feature Extractor** (need to be trained before the net training session) to implement
+
+-   ### Coordinate Transforming
+
+    <img src="images/image-20230812215258006.png" alt="image-20230812215258006" style="zoom: 33%;" />
+
+    也可以作为网络的一层让模型自己学习参数（类似CNN的Spatial Transformer）
+
+-   **Color Histogram:**
+
+    <img src="images/image-20230812215840357.png" alt="image-20230812215840357" style="zoom: 50%;" />
+
+    强调图片整体包含的颜色（不是拆分颜色通道！！）
+
+-   **HoG:**
+
+    <img src="images/image-20230812220141953.png" alt="image-20230812220141953" style="zoom:50%;" />
+
+-   **Bag of Words:**
+
+    <img src="images/image-20230812220231151.png" alt="image-20230812220231151" style="zoom: 50%;" />
+
+-   
 
 
 
@@ -67,6 +207,38 @@
 -   信息增益（分类前后**信息熵**之差，分类后用的是加权信息熵）
 -   增益率（分类前后按特征可取值数量进行惩罚的信息增益率）
 -   基尼指数（**基尼值**为数据集中任意两样本类别不一致的概率，其相反数即数据集纯度；基尼指数为以一个特征\<属性>划分数据集后数据集的加权基尼值）
+
+
+
+## Smoothing
+
+### Problem with Zero Probabilities:
+
+Imagine you are building a Naïve Bayes classifier to classify text documents into different categories. You calculate probabilities based on the frequency of words in your training data. If a particular word appears in one category but not in another, the probability of that word given the second category would be zero.
+
+Now, if you multiply this zero probability with any other probability, the result will still be zero. This can lead to a situation where a single zero probability completely nullifies all other information, leading to incorrect classifications.
+
+### Laplacian Correction Solution:
+
+Laplacian correction is a way to handle this problem by adding a small positive value to the probability calculations. The idea is to assume that every possible outcome has been seen at least once, even if it hasn't appeared in the training data.
+
+The formula for Laplacian correction in the context of Naïve Bayes for a given category *c* and word *w* is:
+$$
+P(w∣c)=count\ of\ w\ in\ c\ +1/ total\ count\ of\ words\ in\ c+V
+$$
+Here:
+
+-   $count\ of\ w\ in\ c$ is the number of times word *w* appears in category *c*.
+-   *V* is the number of unique words in the vocabulary.
+-   The "+1" in the numerator and "+V" in the denominator are the Laplacian corrections.
+
+### Benefits:
+
+1.  **Avoids Zero Probabilities**: By adding 1 to the numerator, you ensure that no probability is zero, even if a word has not been seen in a particular category.
+2.  **Stabilizes Estimates**: In cases where the data is sparse, Laplacian correction helps in providing a more stable estimate of probabilities.
+3.  **Simple and Effective**: It's a simple technique that often works well in practice, especially for text classification tasks.
+
+In summary, Laplacian correction is a smoothing technique that helps in handling zero probabilities, making models like Naïve Bayes more robust and effective, particularly when dealing with sparse data.
 
 
 
@@ -112,7 +284,7 @@ $$
 $$
 其中，$A$ 是一个表示线性变换的方阵，**需要学习的参数个数即共 $n×n+n=(n+1)n$ 个**。
 
-该种 Layer <u>**加入总模型中一起进行 GD 优化（直接视为模型的一部分）**，且可插入模型任意所需位置</u>。
+该种 Layer <u>**加入总模型中一起进行 GD 优化（直接视为模型训练的一部分）**，且可插入模型任意所需位置</u>。
 
 ### Feature Normalization Layer
 

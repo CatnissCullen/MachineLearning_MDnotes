@@ -13,6 +13,28 @@ $$
 -   Regularization Loss => Structural Risk 
 -   $\lambda$ => Trade-off Control
 
+**About Backprop.**
+
+画这样的变量流程图可以帮助计算梯度，前向传播时计算局部偏导，反向传播时据链式法则把各局部偏导相乘
+
+<img src="images/image-202308181728017031.png" alt="image-20230818172801703" style="zoom: 25%;" />
+
+coding exp:
+
+<img src="images/image-20230819163635435.png" alt="image-20230819163635435" style="zoom:33%;" />
+
+<u>Types of $f$ (Gate/ Node) in Backprop view</u>: 
+
+-   **ADD GATE** --- gradient distributer
+-   **MAX GATE** --- gradient router
+-   **MUL GATE** --- gradient switcher
+
+ ![image-20230818174609742](images/image-20230818174609742.png)
+
+梯度传播的结点可以是自己以任意粒度集成的结点（即“门”），即神经网络的layer中的神经元（neuron）
+
+**Interpretation of Gradients:** ==How much a $Param$ effects the Output==
+
 
 
 ## MSE Loss
@@ -101,6 +123,8 @@ $1−(y′∗y)$ 中的 $1$ 为**距离因子**，非0即可，与实际的最�
 >   **安全间隔**的**最大化**也可理解为对<u>已经分类正确且一定程度远离边界</u>的结果的**附加惩罚**，需要充分正确（和决策边界<u>拉开**尽量大**的距离</u>）才是成功分类（对未见数据达到最大包容度） 。这就是 **L2 正则化防止过拟合**的本质。
 >
 >   <img src="images/image-20230812174803809.png" alt="image-20230812174803809" style="zoom:50%;" />
+>
+>   **支持向量法**对Loss的处理（SVM_Loss）可以推广到别的模型！！
 
 ### 对于多元分类
 

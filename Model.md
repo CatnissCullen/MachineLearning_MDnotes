@@ -40,12 +40,34 @@
 
 
 
+## Quick Understanding of Neural Networks
+
+**Basic Form of NN:** 
+
+$Linear\ Layer$ -> $Non-Linear\ Activation\ Func$ (Like a firing rate of impulses carried away from cell body; most similar one to the actual brain is the ReLU) -> $Linear\ Layer$ -> ... (Stack until it's a complex enough non-linear function but need to trade-off with difficulty in training)
+
+![image-20230819180311872](images/image-20230819180311872.png)
+
+![image-20230819181131837](images/image-20230819181131837.png)
+
+![image-20230819181020242](images/image-20230819181020242.png)
+
+![image-20230819181206616](images/image-20230819181206616.png)
+
+
+
 ## Hyper-Parameters
+
+### Common Ones
 
 -   **(Initial) Learning Rate (set in Optimizer)** 
 -   **Momentum (set in Optimizer)**
 -   **Dropout (set in NN Module)**
 -   **Weight-decay (set in Optimizer)**
+
+### How to Tune
+
+Initialize a set of HP -> Train on training set with this set of HP -> Get the best learned Params set (the Model) of this set of HP -> Predict with validation set -> Get an Acc -> ... (LOOP UNTIL THE ACC IS SATISFYING ENOUGH)
 
 
 
@@ -227,7 +249,7 @@ See  [DataProcessing](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\DataProcessing.md)
 
 
 
-## Classic Model Structures
+## Classic Layers/ Model Structures
 
 ### Linear Regression
 
@@ -490,6 +512,8 @@ $\vec S_i$ 是第 i 个样本在各个类别中获得的分数组成的向量**�
 
 <img src="images/image-20230812172829902.png" alt="image-20230812172829902" style="zoom:50%;" />
 
+其中“1”对应交叉熵损失中的实际分布中概率，“log(...)”对应交叉熵损失中的估计分布中概率
+
 ```python
 class My_Model(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -508,6 +532,10 @@ class My_Model(nn.Module):
 >   -   在网络末端由线性函数的输出生成概率分布（映射到 [0,1]）
 >   -   在网络末端由线性函数的输出生成概率分布之前，对<u>每个特征</u>分别实现特征变换使得线性可分（Logistic Regression 网络中用）【也可加多层变换】
 >   -   在网络内部每层输出后用作激活函数引入非线性使得模型可以更好地逼近复杂的函数（但一般用ReLU）
+
+#### SVM vs SOFTMAX
+
+![img](images/svmvssoftmax.png)
 
 ****
 
@@ -555,7 +583,7 @@ https://youtu.be/wulqhgnDr7E
 
 |                                                              |     训练时`.train()`      |            验证/ 测试时`.eval()`             |
 | :----------------------------------------------------------: | :-----------------------: | :------------------------------------------: |
-| 添加**`with torch.no_grad():`**禁止在`.forward()`时提前做好求梯度的预备计算并存储（`.forward()`默认内置这一操作） |             ❌             |       ✔️（节省存储且加速`.forward()`）        |
+| 添加**`with torch.no_grad():`**禁止在`.forward()`时提前局部偏导并存储（`.forward()`默认内置这一操作；`.backward()`时只是把各局部偏导据链式法则相乘） |             ❌             |       ✔️（节省存储且加速`.forward()`）        |
 |                  自动调整学习率（如果可以）                  |             ✔️             |                      ❌                       |
 |         据概率（给定参数）随机关闭神经元（dropout）          |             ✔️             |                      ❌                       |
 |              `.BatchNorm2d`（如果模型中设置了）              | 计算每个batch的均值和方差 | 使用在训练过程中计算得到的移动平均均值和方差 |

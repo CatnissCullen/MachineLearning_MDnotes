@@ -56,18 +56,89 @@ $Linear\ Layer$ -> $Non-Linear\ Activation\ Func$ (Like a firing rate of impulse
 
 
 
+
+
+## Activation Function
+
+1.  **Sigmoid**:
+
+    -   **Function**: 
+        $$
+        f(x)=\frac{1}{1+e^{-x}}
+        $$
+        
+
+    -   **Gradient**: 
+        $$
+        f'(x)=f(x)(1-f(x))
+        $$
+        
+
+    -   **Problematic Region**: The gradient becomes close to zero for very large negative or positive values of $x$. In these regions, the sigmoid function saturates, meaning that it becomes very flat. This leads to vanishing gradients during backpropagation, which can slow down or halt training.
+
+2.  **ReLU (Rectified Linear Unit)**:
+
+    -   **Function**:
+        $$
+        f(x)=max(0,x)
+        $$
+         
+
+    -   **Gradient**: 
+        $$
+        f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
+        $$
+        
+
+    -   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
+
+3.  **Leaky ReLU**:
+
+    -   **Function**: 
+        $$
+        f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
+        $$
+        
+
+    -   **Gradient**: 
+        $$
+        f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
+        $$
+        
+
+    -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
+
+In summary:
+
+-   **Sigmoid** has vanishing gradient problems for very large negative or positive inputs.
+-   **ReLU** has zero gradient for negative inputs, leading to the dying ReLU problem.
+-   **Leaky ReLU** attempts to mitigate the dying ReLU problem but can still have near-zero gradients for negative inputs if $α$ is very small.
+
+
+
+
+
 ## Hyper-Parameters
 
 ### Common Ones
 
+-   **Batch Size**
+
+    >   *It is usually based on memory constraints (if any), or set to some value, e.g. 32, 64 or 128. We **use powers of 2 in practice** because many vectorized operation implementations work faster when their inputs are sized in powers of 2.*
+
 -   **(Initial) Learning Rate (set in Optimizer)** 
+
+    >   ***Effect of step size**. Choosing the step size (also called the learning rate) will become one of the most important (and most headache-inducing) hyperparameter settings in training a neural network. In our blindfolded hill-descent analogy, <u>we feel the hill below our feet sloping in some direction, but the step length we should take is uncertain</u>. If we shuffle our feet carefully we can expect to make consistent but very small progress (this corresponds to having a small step size). Conversely, we can choose to make a large, confident step in an attempt to descend faster, but this may not pay off. At some point taking a bigger step gives a higher loss as we “overstep”.*
+
 -   **Momentum (set in Optimizer)**
+
 -   **Dropout (set in NN Module)**
+
 -   **Weight-decay (set in Optimizer)**
 
 ### How to Tune
 
-Initialize a set of HP -> Train on training set with this set of HP -> Get the best learned Params set (the Model) of this set of HP -> Predict with validation set -> Get an Acc -> ... (LOOP UNTIL THE ACC IS SATISFYING ENOUGH)
+Initialize a set of HP -> Train on training set with this set of HP -> Get the best learned Params set (the Model) of this set of HP -> Predict with validation set -> Get an Acc -> ... (<u>**CROSS -VALIDATION**</u> LOOP UNTIL THE ACC IS SATISFYING ENOUGH)
 
 
 
@@ -81,7 +152,7 @@ Initialize a set of HP -> Train on training set with this set of HP -> Get the b
 
     *($\mu$的一阶矩是无偏估计)*  
 
-2.  **Variance（方差）**：方差是指模型预测的变化性或离散程度，即同样大小的不同训练集训练出的模型的预测结果的变化。如果模型对训练数据的小变动非常敏感，那么模型就有高方差，这通常会导致过拟合（overfitting），即模型在训练集上表现很好，但在测试集（即未见过的数据）上表现差。
+2.  **Variance（方差）/ Deviation（标准差）**：方差是指模型预测的变化性或离散程度，即同样大小的不同训练集训练出的模型的预测结果的变化。如果模型对训练数据的小变动非常敏感，那么模型就有高方差，这通常会导致过拟合（overfitting），即模型在训练集上表现很好，但在测试集（即未见过的数据）上表现差。
 
     <img src="images/image-20230724174527318.png" alt="image-20230724174527318" style="zoom:50%;" />
 
@@ -583,7 +654,7 @@ https://youtu.be/wulqhgnDr7E
 
 |                                                              |     训练时`.train()`      |            验证/ 测试时`.eval()`             |
 | :----------------------------------------------------------: | :-----------------------: | :------------------------------------------: |
-| 添加**`with torch.no_grad():`**禁止在`.forward()`时提前局部偏导并存储（`.forward()`默认内置这一操作；`.backward()`时只是把各局部偏导据链式法则相乘） |             ❌             |       ✔️（节省存储且加速`.forward()`）        |
+| 添加**`with torch.no_grad():`**禁止在`.forward()`时存储反向传播要用的值（`.forward()`默认内置这一操作） |             ❌             |       ✔️（节省存储且加速`.forward()`）        |
 |                  自动调整学习率（如果可以）                  |             ✔️             |                      ❌                       |
 |         据概率（给定参数）随机关闭神经元（dropout）          |             ✔️             |                      ❌                       |
 |              `.BatchNorm2d`（如果模型中设置了）              | 计算每个batch的均值和方差 | 使用在训练过程中计算得到的移动平均均值和方差 |

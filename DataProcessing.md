@@ -144,36 +144,6 @@
 
 
 
-## **Feature Representation**
-
-**Fancier Feature Vectors:**
-
-Can use **Feature Extractor** (need to be trained before the net training session) to implement
-
--   ### Coordinate Transforming
-
-    <img src="images/image-20230812215258006.png" alt="image-20230812215258006" style="zoom: 33%;" />
-
-    也可以作为网络的一层让模型自己学习参数（类似CNN的Spatial Transformer）
-
--   **Color Histogram:**
-
-    <img src="images/image-20230812215840357.png" alt="image-20230812215840357" style="zoom: 50%;" />
-
-    强调图片整体包含的颜色（不是拆分颜色通道！！）
-
--   **HoG:**
-
-    <img src="images/image-20230812220141953.png" alt="image-20230812220141953" style="zoom:50%;" />
-
--   **Bag of Words:**
-
-    <img src="images/image-20230812220231151.png" alt="image-20230812220231151" style="zoom: 50%;" />
-
--   
-
-
-
 ## Kernel Trick/ Kernelize
 
 用核函数实现不可分训练集的高维线性可分：
@@ -272,7 +242,47 @@ In summary, Laplacian correction is a smoothing technique that helps in handling
 
 
 
-## Processing Layers within the Model
+## Feature Extractor (<u>Initial</u> Layers in the Model)
+
+To speedu
+
+>   *A Feature Extractor is a part of a neural network that is responsible for **extracting <u>relevant</u> features （只提取与任务有关的特征） from the raw input data**. This is typically the **initial layers** of a deep learning model, such as <u>Convolutional Neural Networks (CNNs)</u>, where raw pixel values are transformed into a higher-level representation that captures the essential characteristics of the data.*
+>
+>   *An Extractor operate on a single image and return a feature vector for that image or the concatenation of many feature vectors for a single image (when the extractor is a combination of many types of feature extractions).*  
+>
+>   *Feature extraction is crucial for tasks like image classification, object detection, etc., where the model needs to understand the underlying patterns and structures in the data.*
+
+### CNN
+
+see [Model](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\Model.md)
+
+### Other Feature Representation for Images
+
+Can use **Feature Extractor** (need to be trained before the net training session) to implement
+
+-   ### Coordinate Transforming
+
+    <img src="images/image-20230812215258006.png" alt="image-20230812215258006" style="zoom: 33%;" />
+
+-   **Color Histogram:**
+
+    <img src="images/image-20230812215840357.png" alt="image-20230812215840357" style="zoom: 50%;" />
+
+    强调图片整体包含的颜色（不是拆分颜色通道！！）
+
+-   **HoG:**
+
+    <img src="images/image-20230812220141953.png" alt="image-20230812220141953" style="zoom:50%;" />
+
+-   **Bag of Words:**
+
+    <img src="images/image-20230812220231151.png" alt="image-20230812220231151" style="zoom: 50%;" />
+
+    
+
+
+
+## Processing Layers <u>within</u> the Model
 
 ### Spatial Transformer Layer ( for images)
 
@@ -284,7 +294,15 @@ $$
 $$
 其中，$A$ 是一个表示线性变换的方阵，**需要学习的参数个数即共 $n×n+n=(n+1)n$ 个**。
 
-该种 Layer <u>**加入总模型中一起进行 GD 优化（直接视为模型训练的一部分）**，且可插入模型任意所需位置</u>。
+该种 Layer <u>**加入总模型中一起进行 GD 优化（直接视为模型训练的一部分）**，且可插入模型任意所需位置</u>，是与神经网络层完全独立的前置 Layer。
+
+>    *It allows the network to learn how to actively spatially transform feature maps in a way that enhances the geometric invariance of the model. This can be useful for tasks where the input data might be misaligned or in different orientations.*
+>
+>   *The Spatial Transformer Layer consists of three main components:*
+>
+>   -   ***Localization Network**: Learns the parameters of the spatial transformation.*
+>   -   ***Grid Generator**: Generates a grid of coordinates that correspond to the input data.*
+>   -   ***Sampler**: Applies the transformation to the input data based on the parameters learned by the localization network.*
 
 ### Feature Normalization Layer
 

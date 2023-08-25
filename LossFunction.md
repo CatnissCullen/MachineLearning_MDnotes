@@ -2,9 +2,16 @@
 
 ****
 
+
+
+## Interpretation of Loss Func.
+
 ***to evaluate OUR INSATISFACTORY OF MODEL!!!! (the disability of generalization)***
 
-STANDARD FORM: 
+
+
+## Standard Form
+
 $$
 Loss\ =\ Training\ Loss\ +\ \lambda\cdot Regularization\ Loss
 $$
@@ -13,15 +20,35 @@ $$
 -   Regularization Loss => Structural Risk 
 -   $\lambda$ => Trade-off Control
 
-**About Backprop.**
 
-画这样的变量流程图可以帮助计算梯度，前向传播时计算局部偏导，反向传播时据链式法则把各局部偏导相乘
+
+## About Backprop.
+
+### How to Calculate???
+
+画这样的变量流程图（circuit graph）可以帮助计算梯度
 
 <img src="images/image-202308181728017031.png" alt="image-20230818172801703" style="zoom: 25%;" />
 
-coding exp:
+<img src="images/image-20230820153859965.png" alt="image-20230820153859965" style="zoom: 33%;" />
 
-<img src="images/image-20230819163635435.png" alt="image-20230819163635435" style="zoom:33%;" />
+![20a8958e23371b2778295d230907abb](images/20a8958e23371b2778295d230907abb.jpg)
+
+*(a 2-layer process)*
+
+***前向传播时计算结点值并存储、返回（用于反向传播时求局部偏导），反向传播时据链式法则求各局部偏导并与上游传来的外层导数相乘：***
+
+-   **首先用最终输出计算 $Loss$，并计算 $Loss$ 对最终输出矩阵的导数 $doutn$，一起返回** （该步打包在实现 $Loss$ 的函数内）
+-   **将 $dout_n$ 传到关于第 $n$ 层的反向传播函数内，其中计算 $dout_n$ 对 $W_{n}$ 和 $b_{n}$ 的偏导，以及对 $dout_{n-1}$ 的偏导，一起返回** 
+-   **将 $dout_{n-1}$ 传到关于第 $n-1$ 层的反向传播函数内**，以此类推，直到 $n=1$（$dout_0$ 就是总输入 $X$，无需计算，可用`_`接受返回值）
+
+>   *Every gate in a circuit diagram gets some inputs and can right away compute two things: 1. **its output value** and 2. **the local gradient of its output with respect to its inputs**.*
+>
+>   *Notice that the gates can do this **completely independently** without being aware of any of the details of the full circuit that they are embedded in.*
+>
+>   *Once the forward pass is over, during backpropagation the gate will eventually learn about the gradient of its output value on the final output of the entire circuit.* 
+
+>   *Chain rule says that the gate should take that gradient and **multiply** it into **every gradient it normally computes for all of its inputs**.*
 
 <u>Types of $f$ (Gate/ Node) in Backprop view</u>: 
 
@@ -29,11 +56,113 @@ coding exp:
 -   **MAX GATE** --- gradient router
 -   **MUL GATE** --- gradient switcher
 
- ![image-20230818174609742](images/image-20230818174609742.png)
+<img src="images/image-20230820162526698.png" alt="image-20230820162526698" style="zoom:33%;" />
 
-梯度传播的结点可以是自己以任意粒度集成的结点（即“门”），即神经网络的layer中的神经元（neuron）
+>   *⚠️ **Unintuitive effects and their consequences.** Notice that if one of the inputs to the multiply gate is very small and the other is very big, then the multiply gate will do something slightly unintuitive: it will assign a relatively huge gradient to the small input and a tiny gradient to the large input. <u>Note that in linear classifiers where the weights are dot producted $w^Tx_i$ (multiplied) with the inputs, this implies that the scale of the data has an effect on the magnitude of the gradient for the weights.</u> For example, if you multiplied all input data examples $x_i$ by 1000 during preprocessing, then the gradient on the weights will be 1000 times larger, and you’d have to lower the learning rate by that factor to compensate. This is why preprocessing matters a lot, sometimes in subtle ways! And having intuitive understanding for how the gradients flow can help you debug some of these cases.*
 
-**Interpretation of Gradients:** ==How much a $Param$ effects the Output==
+### Coding
+
+coding exp:
+
+<img src="images/image-20230819163635435.png" alt="image-20230819163635435" style="zoom:33%;" />
+
+梯度传播的结点可以是自己以任意粒度集成的结点（即“门”），即神经网络的layer中的神经元（neuron）以及激活函数
+
+>   ***Which parts of the forward function we think of as gates, is <u>a matter of convenience</u>. It helps to be aware of which parts of the expression have <u>easy local gradients</u>, so that they can be chained together <u>with the least amount of code and effort</u>.***
+
+>   *It turns out that the derivative of the **sigmoid function**（包含多个原子的门） with respect to its input simplifies if you perform the derivation (after a fun tricky part where we add and subtract a 1 in the numerator):*
+>
+>   <img src="images/image-20230820160925579.png" alt="image-20230820160925579" style="zoom: 33%;" />
+>
+>   *As we see, the gradient turns out to simplify and becomes surprisingly simple.*
+>
+>   *Therefore, in any real practical application it would be very useful to group these operations into a single gate. Lets see the backprop for this neuron in code:*
+>
+>   ```python
+>   w = [2,-3,-3] # assume some random weights and data
+>   x = [-1, -2]
+>   
+>   # forward pass
+>   dot = w[0]*x[0] + w[1]*x[1] + w[2]
+>   f = 1.0 / (1 + math.exp(-dot)) # sigmoid function
+>   
+>   # backward pass through the neuron (backpropagation)
+>   ddot = (1 - f) * f # gradient on dot variable, using the sigmoid gradient derivation
+>   dx = [w[0] * ddot, w[1] * ddot] # backprop into x
+>   dw = [x[0] * ddot, x[1] * ddot, 1.0 * ddot] # backprop into w
+>   # we're done! we have the gradients on the inputs to the circuit
+>   ```
+>
+>   *✨ **Implementation Tips: ***
+>
+>   -   ***Staged backpropagation** （适度增加中间量分步计算）. As shown in the code above, in practice it is always **helpful to break down the forward pass into stages that are easily backproped through**. For example here we created an intermediate variable `dot` which holds the output of the dot product between `w` and `x`. During backward pass we then successively compute (in reverse order) the corresponding variables (e.g. `ddot`, and ultimately `dw, dx`) that hold the gradients of those variables.*
+>   -   ***Cache forward pass variables**（在前向步进时顺便计算并保存反向传播要用到的量）. To compute the backward pass it is very helpful to have some of the variables that were used in the forward pass. In practice you want to structure your code so that you cache these variables, and so that they are available during backpropagation. If this is too difficult, it is possible (but wasteful) to recompute them.*
+
+
+
+## About Gradients
+
+### Interpretation 
+
+==How much a $Param$ effects the Output==
+
+>   *The derivative on each variable tells you the **sensitivity of the whole expression on its value**.*
+
+### How to Calculate???
+
+There are two ways to compute the gradient: A slow, approximate but easy way (**numerical gradient**), and a fast, exact but more error-prone way that requires calculus (**analytic gradient**). 
+
+#### Numerical
+
+<img src="images/image-20230820152907067.png" alt="image-20230820152907067" style="zoom: 50%;" />
+
+The formula given above allows us to compute the gradient numerically. Here is a generic function that takes a function `f`, a vector `x` to evaluate the gradient on, and returns the gradient of `f` at `x`:
+
+```python
+def eval_numerical_gradient(f, x):
+  """
+  a naive implementation of numerical gradient of f at x
+  - f should be a function that takes a single argument
+  - x is the point (numpy array) to evaluate the gradient at
+  """
+
+  fx = f(x) # evaluate function value at original point
+  grad = np.zeros(x.shape)
+  h = 0.00001
+
+  # iterate over all indexes in x
+  it = np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
+  while not it.finished:
+
+    # evaluate function at x+h
+    ix = it.multi_index
+    old_value = x[ix]
+    x[ix] = old_value + h # increment by h
+    fxh = f(x) # evalute f(x + h)
+    x[ix] = old_value # restore to previous value (very important!)
+
+    # compute the partial derivative
+    grad[ix] = (fxh - fx) / h # the slope
+    it.iternext() # step to next dimension
+
+  return grad
+```
+
+Following the gradient formula we gave above, the code above **iterates over all dimensions one by one**, **makes a small change `h` along that dimension** and **calculates the partial derivative of the loss function** along that dimension by seeing how much the function changed. The variable `grad` holds the full gradient in the end.
+
+⚠️ Note that in the mathematical formulation the gradient is defined in the limit as **h** goes towards zero, but **in practice it is often sufficient to use a very small value** (such as 1e-5 as seen in the example). **Ideally, you want to use the smallest step size that does not lead to numerical issues.** Additionally, in practice it often works better to compute the numeric gradient using the **centered difference formula**: 
+
+<img src="images/image-20230820153146466.png" alt="image-20230820153146466" style="zoom:50%;" />
+
+See [wiki](http://en.wikipedia.org/wiki/Numerical_differentiation) for details.
+
+#### Analytical
+
+直接根据求导公式手动实现求导列式计算
+
+#### In Practice
+
+***用数值法验证解析法的代码是否正确，最终在反向传播法中使用解析法求局部偏导***
 
 
 

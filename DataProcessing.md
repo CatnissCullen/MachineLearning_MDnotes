@@ -14,7 +14,7 @@
 
 -   看作 3 维矩阵（RGB Channels、长度、宽度）输入CNN，输入全连接网络前拉直（flatten）成一维向量（具体见卷积神经网络 goodnotes）
 
-    ![image-20230812220343429](image-20230812220343429.png)
+    <img src="image-20230812220343429.png" alt="image-20230812220343429" style="zoom: 50%;" />
 
 ### Audio
 
@@ -43,10 +43,18 @@
 >   **Normalization** is a general term that refers to the process of transforming data **into a standard or common scale**. It's often used to describe various techniques that make data more comparable and interpretable by algorithms.
 >
 >   --- *GPT4*
+>
+>   **Normalization** refers to normalizing the data dimensions so that they are of approximately the same scale. There are two common ways of achieving this normalization. One is to divide each dimension by its standard deviation, once it has been zero-centered: (`X /= np.std(X, axis = 0)`). Another form of this preprocessing normalizes each dimension so that the min and max along the dimension is -1 and 1 respectively. It only makes sense to apply this preprocessing if you have a reason to believe that different input features have different scales (or units), but they should be of approximately equal importance to the learning algorithm. In case of images, the relative scales of pixels are already approximately equal (and in range from 0 to 255), so it is not strictly necessary to perform this additional preprocessing step.
+>
+>   --- *cs231n*
 
 我的理解：把没有统一变动范围的各值，映射到一个度量范围一定的标尺的刻度上，具体度量范围？-> 不同标准化方法有不同的范围，范围的具体值要适应具体值集，因此由该值集本身的数字特征导出（区别于 $Softmax$ ！！）
 
-### Centering 目的
+<img src="images/image-20230825150056430.png" alt="image-20230825150056430" style="zoom: 33%;" />
+
+### Centering (Subtraction) 目的
+
+>   **Mean subtraction** is the most common form of preprocessing. It involves subtracting the mean across every individual *feature* in the data, and has the geometric interpretation of centering the cloud of data around the origin along every dimension. In numpy, this operation would be implemented as: `X -= np.mean(X, axis = 0)`. **With images specifically, for convenience it can be common to <u>subtract a single value from all pixels</u> (e.g. `X -= np.mean(X)`), or to <u>do so separately across the three color channels</u>.**
 
 1.  **Interpretability**: By centering the data, you shift the origin to the mean of the data. This can make the interpretation of coefficients in linear models more straightforward, as they now represent deviations from the mean rather than from 0.
 2.  **Numerical Stability**: Centering can improve the numerical stability of some algorithms, particularly those that involve matrix inversion. When features have very large values, the computations can become numerically unstable, leading to inaccurate results. Centering helps to mitigate this issue.
@@ -73,9 +81,9 @@
 
     >   $exp:$  In the case of images, this corresponds to computing a ***mean image*** <u>across the training images</u> and subtracting it from every image to get images...
 
-### *Z-score Normalization (Standardization)*
+### *Z-score Normalization (Standardization; MOST COMMON NORMALIZATION)*
 
--   Centering Method: Subtracting the mean ($μ$) of the feature.
+-   Centering Method: Subtracting the mean ($μ$) of the feature (zero-centered)
 
 -   Scaling Method: Dividing by the standard deviation ($\sigma$)
 
@@ -141,6 +149,56 @@
     $$
     X_i'=\frac{X_i}{||\vec X||}
     $$
+
+
+
+## PCA & Whitening Image Data
+
+**PCA and Whitening** is another form of preprocessing. In this process, the data is first **zero-centered** as described above. Then, we can compute the covariance matrix that tells us about the correlation structure in the data:
+
+```python
+# Assume input data matrix X of size [N x D]
+X -= np.mean(X, axis = 0) # zero-center the data (important)
+cov = np.dot(X.T, X) / X.shape[0] # get the data covariance matrix
+```
+
+The (i,j) element of the data covariance matrix contains the *covariance* between i-th and j-th dimension of the data. In particular, the diagonal of this matrix contains the variances. Furthermore, the covariance matrix is symmetric and [positive semi-definite](http://en.wikipedia.org/wiki/Positive-definite_matrix#Negative-definite.2C_semidefinite_and_indefinite_matrices). We can compute the SVD factorization of the data covariance matrix:
+
+```python
+U,S,V = np.linalg.svd(cov)
+```
+
+where the columns of `U` are the eigenvectors and `S` is a 1-D array of the singular values. To decorrelate the data, we project the original (but zero-centered) data into the eigenbasis:
+
+```python
+Xrot = np.dot(X, U) # decorrelate the data
+```
+
+Notice that the columns of `U` are a set of orthonormal vectors (norm of 1, and orthogonal to each other), so they can be regarded as basis vectors. The projection therefore corresponds to a rotation of the data in `X` so that the new axes are the eigenvectors. If we were to compute the covariance matrix of `Xrot`, we would see that it is now diagonal. A nice property of `np.linalg.svd` is that in its returned value `U`, the eigenvector columns are sorted by their eigenvalues. We can use this to reduce the dimensionality of the data by only using the top few eigenvectors, and discarding the dimensions along which the data has no variance. This is also sometimes referred to as [Principal Component Analysis (PCA)](http://en.wikipedia.org/wiki/Principal_component_analysis) dimensionality reduction:
+
+```python
+Xrot_reduced = np.dot(X, U[:,:100]) # Xrot_reduced becomes [N x 100]
+```
+
+After this operation, we would have reduced the original dataset of size [N x D] to one of size [N x 100], keeping the 100 dimensions of the data that contain the most variance. It is very often the case that you can get very good performance by training linear classifiers or neural networks on the PCA-reduced datasets, obtaining savings in both space and time.
+
+The last transformation you may see in practice is **whitening**. The whitening operation takes the data in the eigenbasis and divides every dimension by the eigenvalue to normalize the scale. The geometric interpretation of this transformation is that if the input data is a multivariable gaussian, then the whitened data will be a gaussian with zero mean and identity covariance matrix. This step would take the form:
+
+```python
+# whiten the data:
+# divide by the eigenvalues (which are square roots of the singular values)
+Xwhite = Xrot / np.sqrt(S + 1e-5)
+```
+
+*Warning: Exaggerating noise.* Note that we’re adding 1e-5 (or a small constant) to prevent division by zero. One weakness of this transformation is that it can greatly exaggerate the noise in the data, since it stretches all dimensions (including the irrelevant dimensions of tiny variance that are mostly noise) to be of equal size in the input. This can in practice be mitigated by stronger smoothing (i.e. increasing 1e-5 to be a larger number).
+
+![img](images/prepro2.jpeg)
+
+PCA / Whitening. **Left**: Original toy, 2-dimensional input data. **Middle**: After performing PCA. The data is centered at zero and then rotated into the eigenbasis of the data covariance matrix. This decorrelates the data (the covariance matrix becomes diagonal). **Right**: Each dimension is additionally scaled by the eigenvalues, transforming the data covariance matrix into the identity matrix. Geometrically, this corresponds to stretching and squeezing the data into an isotropic gaussian blob.
+
+We can also try to visualize these transformations with CIFAR-10 images. The training set of CIFAR-10 is of size 50,000 x 3072, where every image is stretched out into a 3072-dimensional row vector. We can then compute the [3072 x 3072] covariance matrix and compute its SVD decomposition (which can be relatively expensive). What do the computed eigenvectors look like visually? An image might help:
+
+![img](images/cifar10pca.jpeg)
 
 
 
@@ -262,21 +320,21 @@ Can use **Feature Extractor** (need to be trained before the net training sessio
 
 -   ### Coordinate Transforming
 
-    <img src="images/image-20230812215258006.png" alt="image-20230812215258006" style="zoom: 33%;" />
+    <img src="images/image-20230812215258006.png" alt="image-20230812215258006" style="zoom: 25%;" />
 
 -   **Color Histogram:**
 
-    <img src="images/image-20230812215840357.png" alt="image-20230812215840357" style="zoom: 50%;" />
+    <img src="images/image-20230812215840357.png" alt="image-20230812215840357" style="zoom: 40%;" />
 
     强调图片整体包含的颜色（不是拆分颜色通道！！）
 
 -   **HoG:**
 
-    <img src="images/image-20230812220141953.png" alt="image-20230812220141953" style="zoom:50%;" />
+    <img src="images/image-20230812220141953.png" alt="image-20230812220141953" style="zoom: 40%;" />
 
 -   **Bag of Words:**
 
-    <img src="images/image-20230812220231151.png" alt="image-20230812220231151" style="zoom: 50%;" />
+    <img src="images/image-20230812220231151.png" alt="image-20230812220231151" style="zoom: 40%;" />
 
     
 

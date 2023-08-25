@@ -168,7 +168,7 @@ See [wiki](http://en.wikipedia.org/wiki/Numerical_differentiation) for details.
 
 ## MSE Loss
 
-它通常用于回归问题。在回归问题中，我们试图预测一个连续的数值，比如预测房价、股票价格等。MSE会计算模型预测值与真实值之间的平均平方差，衡量预测值与真实值之间的偏差。MSE的值越小，说明模型的预测效果越好。
+它通常用于**回归问题**。在回归问题中，我们试图预测一个连续的数值，比如预测房价、股票价格等。MSE会计算模型预测值与真实值之间的平均平方差，衡量预测值与真实值之间的偏差。MSE的值越小，说明模型的预测效果越好。
 
 ```python
 Loss = torch.nn.MSELoss()

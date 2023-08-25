@@ -67,13 +67,11 @@ $Linear\ Layer$ -> $Non-Linear\ Activation\ Func$ (Like a firing rate of impulse
         f(x)=\frac{1}{1+e^{-x}}
         $$
         
-
-    -   **Gradient**: 
+-   **Gradient**: 
         $$
         f'(x)=f(x)(1-f(x))
         $$
         
-
     -   **Problematic Region**: The gradient becomes close to zero for very large negative or positive values of $x$. In these regions, the sigmoid function saturates, meaning that it becomes very flat. This leads to vanishing gradients during backpropagation, which can slow down or halt training.
 
 2.  **ReLU (Rectified Linear Unit)**:
@@ -82,14 +80,12 @@ $Linear\ Layer$ -> $Non-Linear\ Activation\ Func$ (Like a firing rate of impulse
         $$
         f(x)=max(0,x)
         $$
-         
-
-    -   **Gradient**: 
+        
+-   **Gradient**: 
         $$
         f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
         $$
         
-
     -   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
 
 3.  **Leaky ReLU**:
@@ -99,13 +95,11 @@ $Linear\ Layer$ -> $Non-Linear\ Activation\ Func$ (Like a firing rate of impulse
         f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
         $$
         
-
     -   **Gradient**: 
         $$
         f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
         $$
         
-
     -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
 
 In summary:
@@ -219,7 +213,13 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ### Dropout
 
-类似决策树的剪枝，但 Dropout 一般是随机舍去神经元，剪枝是经泛化性能的比较后减去决策分支。
+类似决策树的剪枝，但 Dropout 一般是随机舍去神经元，剪枝是经泛化性能的比较后减去决策分支
+
+>   **Dropout** is an extremely effective, simple and recently introduced regularization technique by Srivastava et al. in [Dropout: A Simple Way to Prevent Neural Networks from Overfitting](http://www.cs.toronto.edu/~rsalakhu/papers/srivastava14a.pdf) (pdf) that complements the other methods (L1, L2, maxnorm). While training, dropout is implemented by only keeping a neuron active with some probability $p$ (a hyperparameter), or setting it to zero otherwise.
+>
+>   --- *cs231n*
+
+![image-20230825153900438](images/image-20230825153900438.png)
 
 ### Shuffle
 
@@ -228,6 +228,12 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 ### Maximize the Margin + Soft Margin
 
 在分类问题中，最大化有训练集学得的划分超平面两侧的间隔（参考《机器学习》支持向量机），并且允许部分训练数据出错，即落入间隔内而不在硬间隔外部的严格分类区域（软化间隔）。
+
+### Max norm constraints 
+
+>   Another form of regularization is to enforce an absolute upper bound on the magnitude of the weight vector for every neuron and use projected gradient descent to enforce the constraint. In practice, this corresponds to performing the parameter update as normal, and then **enforcing the constraint by clamping the weight vector $\vec W$ of every neuron to satisfy $||\vec W||_2<c$. Typical values of $c$ are on orders of 3 or 4.** Some people report improvements when using this form of regularization. One of its appealing properties is that **network cannot “explode” even when the learning rates are set too high because the updates are always bounded.**
+>
+>   --- *cs231n*
 
 ### Support Vector Regression (SVR)
 
@@ -239,13 +245,13 @@ See [Loss Function](D:\CAMPUS\AI\MachineLearning\LossFunction.md)
 
 ***正则项本质上是支持向量机的最大化间隔法产生的，其表示的其实是划分超平面两侧安全间隔的总大小（待最大化），参考《机器学习》p122（侧栏笔记有推导）,123,133*** 
 
-### (In Classification) Weaken Features of a Each Class
-
-估计各类别的分布时（建模时），**使它们拥有相同的某参数**，该参数<u>由各类别分别用对应训练集估计出的参数再对样本数**加权平均**得到</u>
-
 ### L1 Regularization
 
 比 $L2$ 更鼓励 $W$ 为稀疏矩阵，正则项为 $W$ 的 $L1$ 距离
+
+### (In Classification) Weaken Features of a Each Class
+
+估计各类别的分布时（建模时），**使它们拥有相同的某参数**，该参数<u>由各类别分别用对应训练集估计出的参数再对样本数**加权平均**得到</u>
 
 ### Simplify Network Structure to Cut Down Sensitivity of  Features' Alternation
 
@@ -257,7 +263,7 @@ See  [DataProcessing](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\DataProcessing.md)
 
 ### Cross Validation, K-Fold
 
-
+用于调节超参数的验证方法
 
 
 

@@ -42,9 +42,29 @@
 
 ## Quick Understanding of Neural Networks
 
-**Basic Form of NN:** 
+**Basic Form of a $N+1$ Layers NN Model:** 
 
-$Linear\ Layer$ -> $Non-Linear\ Activation\ Func$ (Like a firing rate of impulses carried away from cell body; most similar one to the actual brain is the ReLU) -> $Linear\ Layer$ -> ... (Stack until it's a complex enough non-linear function but need to trade-off with difficulty in training)
+-   ==A **`Layer`**==
+
+    -   **`Affine Net`** ➡️
+
+        >   ### Affine Transformation in Neural Networks
+        >
+        >   1.  **Linear Transformation**: This involves multiplying the input by a weight matrix. If you have an input vector $X$ and a weight matrix $W$, the linear transformation is $X⋅W$.
+        >   2.  **Translation (Bias Addition)**: After the linear transformation, a bias vector is added to the result. If the bias vector is $b$, the full affine transformation is $X⋅W+b$.
+        >
+        >   Affine Layers are usually **FC** Layers.
+
+    -   *(OPTIONAL)* **`Batch Normalization`** or **`Layer Normalization`** ➡️
+
+    -   **`Non-Linear Activation Func`** (Like a firing rate of impulses carried away from cell body; most similar one to the actual brain is the **`ReLU`**, which is most commonly used) ➡️
+
+    -   *(OPTIONAL)* **`Dropout`** ➡️
+
+-   **Stack " a `Layer`" $N$ times until it's a complex enough non-linear function (but need to trade-off with difficulty in tackling overfitting)** ➡️
+-   The **`Final Layer`**
+    -   **`Affine Net`**➡️
+    -   (OPTIONAL, <u>NEEDED IN CLASSIFICATION</u>) **`Softmax`**
 
 ![image-20230819180311872](images/image-20230819180311872.png)
 

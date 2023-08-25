@@ -14,7 +14,7 @@
 
 -   看作 3 维矩阵（RGB Channels、长度、宽度）输入CNN，输入全连接网络前拉直（flatten）成一维向量（具体见卷积神经网络 goodnotes）
 
-    <img src="image-20230812220343429.png" alt="image-20230812220343429" style="zoom: 50%;" />
+    <img src="images/image-20230812220343429.png" alt="image-20230812220343429" style="zoom: 50%;" />
 
 ### Audio
 

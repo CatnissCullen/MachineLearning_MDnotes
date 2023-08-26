@@ -235,13 +235,78 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ### Dropout
 
-类似决策树的剪枝，但 Dropout 一般是按比例随机关闭神经元，剪枝是经泛化性能的比较后减去决策分支
+***detail see https://cs231n.github.io/neural-networks-2/#reg***
+
+类似决策树的剪枝，但 Dropout 一般是按比例随机关闭神经元（每个$W$中的某些`input_dim`的向量\<一整列设为0>），剪枝是经泛化性能的比较后减去决策分支
 
 >   **Dropout** is an extremely effective, simple and recently introduced regularization technique by Srivastava et al. in [Dropout: A Simple Way to Prevent Neural Networks from Overfitting](http://www.cs.toronto.edu/~rsalakhu/papers/srivastava14a.pdf) (pdf) that complements the other methods (L1, L2, maxnorm). While training, dropout is implemented by only keeping a neuron active with some probability $p$ (a hyperparameter), or setting it to zero otherwise.
 >
 >   --- *cs231n*
 
 ![image-20230825153900438](images/image-20230825153900438.png)
+
+简单做法：单纯在训练时以 $p$ 的概率关闭神经元训练，但由于这样训练后每个神经元的输出为 
+$$
+out'=p\cdot out+(1-p)\cdot0
+$$
+所以用完整网络验证/测试时，为了发挥出用 $Dropout$ 训练的模型的性能（达到输出为 $p\cdot out+(1-p)\cdot0$ 的效果），**需要把原始输出层全部缩小到 $p$ 倍：**
+
+```python
+""" Vanilla Dropout: Not recommended implementation """
+
+p = 0.5 # probability of keeping a unit active. higher = less dropout
+
+def train_step(X):
+  """ X contains the data """
+  
+  # forward pass for example 3-layer neural network
+  H1 = np.maximum(0, np.dot(W1, X) + b1)
+  U1 = np.random.rand(*H1.shape) < p # first dropout mask
+  H1 *= U1 # drop!
+  H2 = np.maximum(0, np.dot(W2, H1) + b2)
+  U2 = np.random.rand(*H2.shape) < p # second dropout mask
+  H2 *= U2 # drop!
+  out = np.dot(W3, H2) + b3
+  
+  # backward pass: compute gradients... (not shown)
+  # perform parameter update... (not shown)
+  
+def predict(X):
+  # ensembled forward pass
+  H1 = np.maximum(0, np.dot(W1, X) + b1) * p # NOTE: scale the activations
+  H2 = np.maximum(0, np.dot(W2, H1) + b2) * p # NOTE: scale the activations
+  out = np.dot(W3, H2) + b3
+```
+
+✨ 优解：直接在训练使用 $Dropout$ 的同时**将输出层扩大到 $1/p$ 倍**，验证/测试时无需任何改动，更方便：
+
+```python
+""" 
+Inverted Dropout: Recommended implementation example.
+We drop and scale at train time and don't do anything at test time.
+"""
+
+p = 0.5 # probability of keeping a unit active. higher = less dropout
+
+def train_step(X):
+  # forward pass for example 3-layer neural network
+  H1 = np.maximum(0, np.dot(W1, X) + b1)
+  U1 = (np.random.rand(*H1.shape) < p) / p # first dropout mask. Notice /p!
+  H1 *= U1 # drop!
+  H2 = np.maximum(0, np.dot(W2, H1) + b2)
+  U2 = (np.random.rand(*H2.shape) < p) / p # second dropout mask. Notice /p!
+  H2 *= U2 # drop!
+  out = np.dot(W3, H2) + b3
+  
+  # backward pass: compute gradients... (not shown)
+  # perform parameter update... (not shown)
+  
+def predict(X):
+  # ensembled forward pass
+  H1 = np.maximum(0, np.dot(W1, X) + b1) # no scaling necessary
+  H2 = np.maximum(0, np.dot(W2, H1) + b2)
+  out = np.dot(W3, H2) + b3
+```
 
 ### Shuffle
 
@@ -333,8 +398,8 @@ See  [DataProcessing](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\DataProcessing.md)
 
 主要的集成方法有：
 
-1.  Bagging（Bootstrap Aggregating）：通过从训练数据中有放回地随机抽样来生成不同的训练集，然后在每个训练集上训练一个模型。最后，所有模型的预测结果通过投票（分类问题）或平均（回归问题）来产生最终预测。随机森林就是一个典型的Bagging的例子。
-2.  Boosting：一种迭代的策略，其中新模型的训练依赖于之前模型的性能。每个新模型都试图修正之前模型的错误。最著名的Boosting算法有AdaBoost和梯度提升。
+1.  Bagging（Bootstrap Aggregating）：通过从训练数据中有放回地随机抽样来生成不同的训练集，然后在每个训练集上训练一个模型。最后，所有模型的预测结果通过投票（分类问题）或平均（回归问题）来产生最终预测。**随机森林（Random Forest）**就是一个典型的Bagging的例子。
+2.  **Boosting**：一种迭代的策略，其中新模型的训练依赖于之前模型的性能。每个新模型都试图修正之前模型的错误。最著名的Boosting算法有AdaBoost和梯度提升。
 3.  Stacking：使用多个模型来训练数据，然后再用一个新的模型（叫做元模型或者二级模型）来预测这些模型的预测结果。
 
 在许多机器学习竞赛中，集成学习被证明是一种非常有效的方法，因为它可以**减少过拟合，增加模型的泛化能力，从而提高预测性能**。

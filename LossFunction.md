@@ -32,9 +32,13 @@ $$
 
 <img src="images/image-20230820153859965.png" alt="image-20230820153859965" style="zoom: 33%;" />
 
-![20a8958e23371b2778295d230907abb](images/20a8958e23371b2778295d230907abb.jpg)
+<img src="images/c9339342eac803c5832c51a77328809.jpg" alt="c9339342eac803c5832c51a77328809" style="zoom:50%;" />
 
-*(a 2-layer process)*
+*(a 2-layer process with 1 sample)*
+
+<img src="images/0cea8adfa024ae04fe284efdf37dbe4.jpg" alt="0cea8adfa024ae04fe284efdf37dbe4" style="zoom:50%;" />
+
+*(a 2-layer process with a batch of N samples \<$X$ has N rows>)*
 
 ***前向传播时计算结点值并存储、返回（用于反向传播时求局部偏导），反向传播时据链式法则求各局部偏导并与上游传来的外层导数相乘：***
 

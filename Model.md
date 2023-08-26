@@ -66,13 +66,15 @@
     -   **`Affine Net`**➡️
     -   (OPTIONAL, <u>NEEDED IN CLASSIFICATION</u>) **`Softmax`**
 
-![image-20230819180311872](images/image-20230819180311872.png)
+<img src="images/image-20230819180311872.png" alt="image-20230819180311872" style="zoom: 25%;" />
+
+<img src="images/a6c92d6122ae931fc0756bb8b0a41ec.jpg" alt="a6c92d6122ae931fc0756bb8b0a41ec" style="zoom:50%;" />
 
 ![image-20230819181131837](images/image-20230819181131837.png)
 
-![image-20230819181020242](images/image-20230819181020242.png)
+<img src="images/image-20230819181020242.png" alt="image-20230819181020242" style="zoom:50%;" />
 
-![image-20230819181206616](images/image-20230819181206616.png)
+<img src="images/image-20230819181206616.png" alt="image-20230819181206616" style="zoom:50%;" />
 
 
 
@@ -174,23 +176,23 @@ Initialize a set of HP -> Train on training set with this set of HP -> Get the b
 
     找同一模型公式的最佳参数相当于对着靶子开一枪，**偏差**相当于瞄准点偏离了实际靶心，**方差**相当于射击点偏离了瞄准点：
 
-    <img src="images/image-20230724174659994.png" alt="image-20230724174659994" style="zoom:50%;" />
+    <img src="images/image-20230724174659994.png" alt="image-20230724174659994" style="zoom: 33%;" />
 
-    <img src="images/image-20230724175124356.png" alt="image-20230724175124356" style="zoom:50%;" />
+    <img src="images/image-20230724175124356.png" alt="image-20230724175124356" style="zoom: 40%;" />
 
     （不同的 $f$ 对应用不同数据点训练出的同一模型公式的不同模型参数）
 
     不同公式的模型的训练结果分布图：
 
-    <img src="images/image-20230724175523663.png" alt="image-20230724175523663" style="zoom:50%;" />
+    <img src="images/image-20230724175523663.png" alt="image-20230724175523663" style="zoom:40%;" />
 
     越复杂的模型受数据集变化的影响越大，变动幅度越大，不同 “universe” 的训练结果间差距更大，即方差更大：
 
-    <img src="images/image-20230724175711069.png" alt="image-20230724175711069" style="zoom:50%;" />
+    <img src="images/image-20230724175711069.png" alt="image-20230724175711069" style="zoom:40%;" />
 
     但方差大时覆盖的范围也越大，取均值（一阶矩）时更容易覆盖“靶心”，因此越复杂的模型偏差越小：
 
-    <img src="images/image-20230724180100173.png" alt="image-20230724180100173" style="zoom:50%;" />
+    <img src="images/image-20230724180100173.png" alt="image-20230724180100173" style="zoom:40%;" />
 
     **结论：**复杂模型（参数多）最理想优化结果和真实情况间 Loss （即Bias）更小，但实际的 training 结果和理想情况差距很大，因为参数多意味着函数空间更大更难优化，需要更大的 Data Set。
 
@@ -200,13 +202,13 @@ Initialize a set of HP -> Train on training set with this set of HP -> Get the b
 
 <img src="images/image-20230724180533868.png" alt="image-20230724180533868" style="zoom: 33%;" />
 
-<img src="images/image-20230724180635703.png" alt="image-20230724180635703" style="zoom:50%;" />
+<img src="images/image-20230724180635703.png" alt="image-20230724180635703" style="zoom:40%;" />
 
 Should：（把所有训练集划分成训练集、验证集）① 用训练集训练 【取训练集对应的最佳参数】-> ② 用验证集再训练 【取①以后验证集对应的最佳参数】-> ③ 用所有数据集最后再训练【取②以后所有数据集对应的最佳参数】
 
-<img src="images/image-20230724180852393.png" alt="image-20230724180852393" style="zoom:50%;" />
+<img src="images/image-20230724180852393.png" alt="image-20230724180852393" style="zoom:40%;" />
 
-<img src="images/image-20230724181425216.png" alt="image-20230724181425216" style="zoom:50%;" />
+<img src="images/image-20230724181425216.png" alt="image-20230724181425216" style="zoom:40%;" />
 
 **虽然直接优化目标是Loss小，而非偏差、方差是否最佳平衡（这也很难作为优化目标），**<u>但一般训练集Loss足够小且测试集Loss不严重高于训练集，就是比较平衡的结果</u>。
 

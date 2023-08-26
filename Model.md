@@ -68,7 +68,7 @@
 
 <img src="images/image-20230819180311872.png" alt="image-20230819180311872" style="zoom: 25%;" />
 
-<img src="images/a6c92d6122ae931fc0756bb8b0a41ec.jpg" alt="a6c92d6122ae931fc0756bb8b0a41ec" style="zoom:50%;" />
+![2e775eb44e3a0edeb4debd1f3a309cb](images/2e775eb44e3a0edeb4debd1f3a309cb.jpg)
 
 ![image-20230819181131837](images/image-20230819181131837.png)
 
@@ -235,7 +235,7 @@ Should：（把所有训练集划分成训练集、验证集）① 用训练集�
 
 ### Dropout
 
-类似决策树的剪枝，但 Dropout 一般是随机舍去神经元，剪枝是经泛化性能的比较后减去决策分支
+类似决策树的剪枝，但 Dropout 一般是按比例随机关闭神经元，剪枝是经泛化性能的比较后减去决策分支
 
 >   **Dropout** is an extremely effective, simple and recently introduced regularization technique by Srivastava et al. in [Dropout: A Simple Way to Prevent Neural Networks from Overfitting](http://www.cs.toronto.edu/~rsalakhu/papers/srivastava14a.pdf) (pdf) that complements the other methods (L1, L2, maxnorm). While training, dropout is implemented by only keeping a neuron active with some probability $p$ (a hyperparameter), or setting it to zero otherwise.
 >

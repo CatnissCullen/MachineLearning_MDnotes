@@ -4,6 +4,19 @@
 
 
 
+## Outliers & Noise
+
+离群值是正确测量数据中的非一般数据，噪声是未正确测量的数据
+
+>   -   **Outliers**: Imagine you're measuring the height of people in a town, and you find one person who is 8 feet tall. That person would be an outlier.
+>   -   **Noise**: Now, let's say your measuring tape has some random errors, showing heights that are plus or minus 2 inches off. That's noise.
+>
+>   *--- GPT4*
+
+
+
+
+
 ## Basics Loading Formats
 
 ### Image

@@ -385,12 +385,23 @@ $$
 
 通常被用在卷积神经网络（CNN）和全连接网络（FCN）的训练中。
 
+>   **Batch Normalization**. A recently developed technique by Ioffe and Szegedy called [Batch Normalization](http://arxiv.org/abs/1502.03167) alleviates a lot of headaches with properly initializing neural networks by explicitly forcing the activations throughout a network to take on a unit gaussian distribution at the beginning of the training. The core observation is that this is possible because **normalization is a simple differentiable operation.** In the implementation, applying this technique usually amounts to **insert the BatchNorm layer immediately after fully connected layers (or convolutional layers, as we’ll soon see), and before non-linearities**. We do not expand on this technique here because it is well described in the linked paper, but note that it has become a very common practice to use Batch Normalization in neural networks. In practice networks that use Batch Normalization are significantly more robust to bad initialization. **Additionally, batch normalization can be interpreted as doing preprocessing at every layer of the network, but integrated into the network itself in a differentiable manner. Neat!**
+
+https://arxiv.org/abs/1502.03167
+
 **作用**：
 
-1.  **深度神经网络训练**：在深度神经网络中，每一层的输入数据分布都会因为上一层参数的更新而改变，这种现象被称为“内部协变量转移”（Internal Covariate Shift）。这会导致网络需要更长的时间去适应这种变化，从而减慢训练速度。通过使用批量归一化，可以将每一层的输入数据强制转化为均值为0，方差为1的标准正态分布，减少内部协变量转移的影响，加快训练速度。
+1.  **深度神经网络训练**：在深度神经网络中，<u>每一层的输入数据分布都会因为上一层参数的更新而改变，这种现象被称为“内部协变量转移”（Internal Covariate Shift）</u>。这会导致网络<u>需要更长的时间去适应这种变化，从而减慢训练速度（需要更多epoch来训练到足够的准确度）</u>。通过使用**批量归一化**，可以将每一层的输入数据**强制转化为均值为0，方差为1**的标准正态分布，**减少内部协变量转移的影响**，**<u>加快训练速度（speed up convergence），并且能削弱模型对参数初始值的敏感度</u>**。
+
+    <img src="images/image-20230829151856668.png" alt="image-20230829151856668" style="zoom:50%;" />
+
+    <img src="images/image-20230829152142001.png" alt="image-20230829152142001" style="zoom:50%;" />
+
 2.  **解决梯度消失和梯度爆炸问题**：在深度神经网络中，当数据的分布不均匀时，容易导致梯度消失和梯度爆炸的问题。通过批量归一化，可以调整数据的分布，缓解这一问题。
-3.  **减少过拟合**：批量归一化在一定程度上具有正则化的效果，可以减少模型的过拟合现象。这是因为在训练过程中，每个mini-batch的数据都有自己的均值和方差，这增加了模型的噪声，相当于添加了一种形式的正则化。
-4.  **允许使用更高的学习率**：批量归一化有助于网络的收敛，并且允许我们使用更大的学习率，这可以进一步加快训练速度。
+
+3.  **减少过拟合**：批量归一化在**一定程度上具有正则化的效果**，可以减少模型的过拟合现象。这是因为在训练过程中，每个mini-batch的数据都有自己的均值和方差，这**增加了模型的噪声**，相当于添加了一种形式的正则化。
+
+4.  **允许使用更高的学习率**：批量归一化有助于网络的收敛，并且**允许我们使用更大的学习率**，这可以**进一步加快训练速度**。
 
 可以插入到网络的任何部分，但**通常放在非线性变换（如ReLU激活函数）之前**。
 

@@ -46,7 +46,7 @@
 
 **Basic Form of a $N+1$ Layers NN Model:** 
 
--   ==A **`Layer`**==
+-   ==A **`Layer`**==   
 
     -   **`Affine Net`** ➡️
 
@@ -156,7 +156,41 @@ In summary:
 
 ### How to Tune
 
+#### General
+
 Initialize a set of HP -> Train on training set with this set of HP -> Get the best learned Params set (the Model) of this set of HP -> Predict with validation set -> Get an Acc -> ... (<u>**CROSS -VALIDATION**</u> LOOP UNTIL THE ACC IS SATISFYING ENOUGH)
+
+#### Tips
+
+>   ### Hyperparameter optimization
+>
+>   As we’ve seen, training Neural Networks can involve many hyperparameter settings. The most common hyperparameters in context of Neural Networks include:
+>
+>   -   the initial learning rate
+>   -   learning rate decay schedule (such as the decay constant)
+>   -   regularization strength (L2 penalty, dropout strength)
+>
+>   But as we saw, there are many more relatively less sensitive hyperparameters, for example in per-parameter adaptive learning methods, the setting of momentum and its schedule, etc. In this section we describe some additional tips and tricks for performing the hyperparameter search:
+>
+>   **Implementation**. Larger Neural Networks typically require a long time to train, so performing hyperparameter search can take many days/weeks. It is important to keep this in mind since it influences the design of your code base. One particular design is to have a **worker** that continuously samples random hyperparameters and performs the optimization. During the training, the worker will keep track of the validation performance after every epoch, and writes a model checkpoint (together with miscellaneous training statistics such as the loss over time) to a file, preferably on a shared file system. It is useful to include the validation performance directly in the filename, so that it is simple to inspect and sort the progress. Then there is a second program which we will call a **master**, which launches or kills workers across a computing cluster, and may additionally inspect the checkpoints written by workers and plot their training statistics, etc.
+>
+>   **Prefer one validation fold to cross-validation**. In most cases a single validation set of respectable size substantially simplifies the code base, without the need for cross-validation with multiple folds. You’ll hear people say they “cross-validated” a parameter, but many times it is assumed that they still only used a single validation set.
+>
+>   **Hyperparameter ranges**. Search for hyperparameters on log scale. For example, a typical sampling of the learning rate would look as follows: `learning_rate = 10 ** uniform(-6, 1)`. That is, we are generating a random number from a uniform distribution, but then raising it to the power of 10. The same strategy should be used for the regularization strength. Intuitively, this is because learning rate and regularization strength have multiplicative effects on the training dynamics. For example, a fixed change of adding 0.01 to a learning rate has huge effects on the dynamics if the learning rate is 0.001, but nearly no effect if the learning rate when it is 10. This is because the learning rate multiplies the computed gradient in the update. Therefore, it is much more natural to consider a range of learning rate multiplied or divided by some value, than a range of learning rate added or subtracted to by some value. Some parameters (e.g. dropout) are instead usually searched in the original scale (e.g. `dropout = uniform(0,1)`).
+>
+>   **Prefer random search to grid search**. As argued by Bergstra and Bengio in [Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf), “randomly chosen trials are more efficient for hyper-parameter optimization than trials on a grid”. As it turns out, this is also usually easier to implement.
+>
+>   <img src="images/gridsearchbad.jpeg" alt="img" style="zoom:50%;" />
+>
+>   Core illustration from [Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf) by Bergstra and Bengio. It is very often the case that some of the hyperparameters matter much more than others (e.g. top hyperparam vs. left one in this figure). Performing random search rather than grid search allows you to much more precisely discover good values for the important ones.
+>
+>   **Careful with best values on border**. Sometimes it can happen that you’re searching for a hyperparameter (e.g. learning rate) in a bad range. For example, suppose we use `learning_rate = 10 ** uniform(-6, 1)`. Once we receive the results, it is important to double check that the final learning rate is not at the edge of this interval, or otherwise you may be missing more optimal hyperparameter setting beyond the interval.
+>
+>   **Stage your search from coarse to fine**. In practice, it can be helpful to first search in coarse ranges (e.g. 10 ** [-6, 1]), and then depending on where the best results are turning up, narrow the range. Also, it can be helpful to perform the initial coarse search while only training for 1 epoch or even less, because many hyperparameter settings can lead the model to not learn at all, or immediately explode with infinite cost. The second stage could then perform a narrower search with 5 epochs, and the last stage could perform a detailed search in the final range for many more epochs (for example).
+>
+>   **Bayesian Hyperparameter Optimization** is a whole area of research devoted to coming up with algorithms that try to more efficiently navigate the space of hyperparameters. The core idea is to appropriately balance the exploration - exploitation trade-off when querying the performance at different hyperparameters. Multiple libraries have been developed based on these models as well, among some of the better known ones are [Spearmint](https://github.com/JasperSnoek/spearmint), [SMAC](http://www.cs.ubc.ca/labs/beta/Projects/SMAC/), and [Hyperopt](http://jaberg.github.io/hyperopt/). However, in practical settings with ConvNets it is still relatively difficult to beat random search in a carefully-chosen intervals. See some additional from-the-trenches discussion [here](http://nlpers.blogspot.com/2014/10/hyperparameter-search-bayesian.html).
+>
+>   --- cs231n
 
 
 
@@ -416,6 +450,17 @@ See  [DataProcessing](D:\CAMPUS\AI\MachineLearning\ML_MDnotes\DataProcessing.md)
 
 在许多机器学习竞赛中，集成学习被证明是一种非常有效的方法，因为它可以**减少过拟合，增加模型的泛化能力，从而提高预测性能**。
 
+>   In practice, one reliable approach to improving the performance of Neural Networks by a few percent is to train multiple independent models, and at test time average their predictions. As the number of models in the ensemble increases, the performance typically monotonically improves (though with diminishing returns). Moreover, the improvements are more dramatic with higher model variety in the ensemble. There are a few approaches to forming an ensemble:
+>
+>   -   **Same model, different initializations**. Use cross-validation to determine the best hyperparameters, then train multiple models with the best set of hyperparameters but with different random initialization. The danger with this approach is that the variety is only due to initialization.
+>   -   **Top models discovered during cross-validation**. Use cross-validation to determine the best hyperparameters, then pick the top few (e.g. 10) models to form the ensemble. This improves the variety of the ensemble but has the danger of including suboptimal models. In practice, this can be easier to perform since it doesn’t require additional retraining of models after cross-validation
+>   -   **Different checkpoints of a single model**. If training is very expensive, some people have had limited success in taking different checkpoints of a single network over time (for example after every epoch) and using those to form an ensemble. Clearly, this suffers from some lack of variety, but can still work reasonably well in practice. The advantage of this approach is that is very cheap.
+>   -   **Running average of parameters during training**. Related to the last point, a cheap way of almost always getting an extra percent or two of performance is to maintain a second copy of the network’s weights in memory that maintains an exponentially decaying sum of previous weights during training. This way you’re averaging the state of the network over last several iterations. You will find that this “smoothed” version of the weights over last few steps almost always achieves better validation error. The rough intuition to have in mind is that the objective is bowl-shaped and your network is jumping around the mode, so the average has a higher chance of being somewhere nearer the mode.
+>
+>   One disadvantage of model ensembles is that they take longer to evaluate on test example. An interested reader may find the recent work from Geoff Hinton on [“Dark Knowledge”](https://www.youtube.com/watch?v=EK61htlw8hY) inspiring, where the idea is to “distill” a good ensemble back to a single model by incorporating the ensemble log likelihoods into a modified objective.
+>
+>   --- *cs231n*
+
 
 
 ## Why Deep?????????
@@ -470,12 +515,34 @@ class My_Model(nn.Module):  # derived from build-in class "nn.Model"
 
 ### CNN ( Convolutional NN)
 
+https://cs231n.github.io/convolutional-networks/#conv
+
 -   ***从网络内部结构改变模型性能***
--   图像数据（矩阵）常用
+-   专用于图像数据（3维矩阵），<u>网络内部保持3维的矩阵格式</u>
 -   需要添加 **Spatial Transformer Layers** 
 -   据具体问题考虑是否使用 **Pooling**（不是所有数据都能用！！一般图像可以）
 
+>   We use three main types of layers to build ConvNet architectures: **Convolutional Layer**, **Pooling Layer**, and **Fully-Connected Layer** (exactly as seen in regular Neural Networks). We will stack these layers to form a full ConvNet **architecture**.
+>
+>   --- *cs231n*
+
+<img src="images/image-20230901104723724.png" alt="image-20230901104723724" style="zoom:30%;" />
+
+事实上也可以用CNN指向Fully-Connected Layer前面的部分（只包括Convolutional Layer和Pooling Layer）
+
 **简化网络使得非全连接，以减少网络层权重（参数）数，以削弱网络的特征敏感度，防止过拟合**
+
+>   *A ConvNet is made up of Layers. Every Layer has a simple API: It transforms an input 3D volume to an output 3D volume with some differentiable function that **may or may not have parameters (e.g. CONV/FC do, RELU/POOL don’t)** and also **may or may not have additional hyperparameters (e.g. CONV/FC/POOL do, RELU doesn’t)**.*  
+>
+>   --- *cs231n*
+
+<img src="images/image-20230901144201391.png" alt="image-20230901144201391" style="zoom: 50%;" />
+
+设输入2D维数为$N^2$，RF的2D维数为$F^2$，Padding宽度为$P$，卷积步长为$S$，输出2D维数为$N'^2$，各维数均须为正整数，则恒有：
+$$
+N'=\frac{N-F+2P}{S}+1
+$$
+![e0caa8c2216966d03a45982ffc50b10](images/e0caa8c2216966d03a45982ffc50b10-1693557035121-4.jpg)
 
 **`torch.nn.Conv2d`** 是 PyTorch 提供的二维卷积操作。卷积在图像处理和计算机视觉中非常重要，特别是在卷积神经网络中。
 

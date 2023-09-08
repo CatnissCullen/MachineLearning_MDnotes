@@ -517,32 +517,120 @@ class My_Model(nn.Module):  # derived from build-in class "nn.Model"
 
 https://cs231n.github.io/convolutional-networks/#conv
 
--   ***从网络内部结构改变模型性能***
--   专用于图像数据（3维矩阵），<u>网络内部保持3维的矩阵格式</u>
--   需要添加 **Spatial Transformer Layers** 
--   据具体问题考虑是否使用 **Pooling**（不是所有数据都能用！！一般图像可以）
+<img src="images/y(1).png" alt="y(1)" style="zoom: 80%;" /> 
+
+#### Basic Form
+
+==***INPUT -> [[CONV -> RELU]\*N -> POOL?]\*M -> [FC -> RELU]\*K -> FC**==  
 
 >   We use three main types of layers to build ConvNet architectures: **Convolutional Layer**, **Pooling Layer**, and **Fully-Connected Layer** (exactly as seen in regular Neural Networks). We will stack these layers to form a full ConvNet **architecture**.
+>
+>   *A ConvNet is made up of Layers. Every Layer has a simple API: It transforms an input 3D volume to an output 3D volume with some differentiable function that **may or may not have parameters (e.g. CONV/FC do, RELU/POOL don’t)** and also **may or may not have additional hyperparameters (e.g. CONV/FC/POOL do, RELU doesn’t)**.*  
 >
 >   --- *cs231n*
 
 <img src="images/image-20230901104723724.png" alt="image-20230901104723724" style="zoom:30%;" />
 
-事实上也可以用CNN指向Fully-Connected Layer前面的部分（只包括Convolutional Layer和Pooling Layer）
-
-**简化网络使得非全连接，以减少网络层权重（参数）数，以削弱网络的特征敏感度，防止过拟合**
-
->   *A ConvNet is made up of Layers. Every Layer has a simple API: It transforms an input 3D volume to an output 3D volume with some differentiable function that **may or may not have parameters (e.g. CONV/FC do, RELU/POOL don’t)** and also **may or may not have additional hyperparameters (e.g. CONV/FC/POOL do, RELU doesn’t)**.*  
->
->   --- *cs231n*
-
 <img src="images/image-20230901144201391.png" alt="image-20230901144201391" style="zoom: 50%;" />
 
-设输入2D维数为$N^2$，RF的2D维数为$F^2$，Padding宽度为$P$，卷积步长为$S$，输出2D维数为$N'^2$，各维数均须为正整数，则恒有：
+#### Usage Overview
+
+-   ***从网络内部结构改变模型性能***
+-   专用于图像数据（3维矩阵），<u>网络内部保持3维的矩阵格式</u>
+-   需要前置 **Spatial Transformer Layers** 
+-   据具体问题考虑是否使用 **Pooling**（不是所有数据都能用！！一般图像可以）
+
+事实上也可以用CNN指向Fully-Connected Layer前面的部分（只包括Convolutional Layer和Pooling Layer）
+
+**IMPORTANT TIPS:**
+
+-   ***Prefer a stack of small filter CONV to one large receptive field CONV layer***
+
+    >   Suppose that you stack three 3x3 CONV layers on top of each other (with non-linearities in between, of course). In this arrangement, each neuron on the first CONV layer has a 3x3 view of the input volume. A neuron on the second CONV layer has a 3x3 view of the first CONV layer, and hence by extension a 5x5 view of the input volume. Similarly, a neuron on the third CONV layer has a 3x3 view of the 2nd CONV layer, and hence a 7x7 view of the input volume. Suppose that instead of these three layers of 3x3 CONV, we only wanted to use a single CONV layer with 7x7 receptive fields. These neurons would have a receptive field size of the input volume that is identical in spatial extent (7x7), but with several disadvantages. First, the neurons would be computing a linear function over the input, while the three stacks of CONV layers contain non-linearities that make their features more expressive. Second, if we suppose that all the volumes have $C$ channels, then it can be seen that the single 7x7 CONV layer would contain $C×(7×7×C)=49C^2$ parameters, while the three 3x3 CONV layers would only contain $3×(C×(3×3×C))=27C^2$ parameters. Intuitively, stacking CONV layers with tiny filters as opposed to having one CONV layer with big filters allows us to express more powerful features of the input, and with fewer parameters. <u>As a practical disadvantage, we might need more memory to hold all the intermediate CONV layer results if we plan to do backpropagation.</u>
+    >
+    >   
+
+-   ***Use Pretrained CNN from ImageNet for work!!!!!!!*** 
+
+    >   **Recent departures.** It should be noted that the conventional paradigm of a linear list of layers has recently been challenged, in Google’s Inception architectures and also in current (state of the art) Residual Networks from Microsoft Research Asia. Both of these (see details below in case studies section) feature more intricate and different connectivity structures.
+    >
+    >   **In practice: use whatever works best on ImageNet**. If you’re feeling a bit of a fatigue in thinking about the architectural decisions, you’ll be pleased to know that in 90% or more of applications you should not have to worry about these. I like to summarize this point as “*don’t be a hero*”: Instead of rolling your own architecture for a problem, you should look at whatever architecture currently works best on ImageNet, download a pretrained model and finetune it on your data. You should rarely ever have to train a ConvNet from scratch or design one from scratch. I also made this point at the [Deep Learning school](https://www.youtube.com/watch?v=u6aEYuemt0M).
+    >
+    >   --- *cs231n*
+
+-   ***Input Size:***
+
+    >   The **input layer** (that contains the image) should be divisible by 2 many times. Common numbers include 32 (e.g. CIFAR-10), 64, 96 (e.g. STL-10), or 224 (e.g. common ImageNet ConvNets), 384, and 512.
+    >
+    >   --- *cs231n*
+
+-   ***Conv Layer Size:***
+
+    >   The **conv layers** should be using small filters (e.g. 3x3 or at most 5x5), using a stride of S=1, and crucially, padding the input volume with zeros in such way that the conv layer does not alter the spatial dimensions of the input. That is, when F=3, then using P=1 will retain the original size of the input. When F=5, P=2. For a general F, it can be seen that P=(F−1)/2 preserves the input size. If you must use bigger filter sizes (such as 7x7 or so), it is only common to see this on the very first conv layer that is looking at the input image.
+    >
+    >   --- *cs231n*
+
+-   ***Pool Layer Size:***
+
+    >   The **pool layers** are in charge of downsampling the spatial dimensions of the input. The most common setting is to use max-pooling with 2x2 receptive fields (i.e. F=2), and with a stride of 2 (i.e. S=2). Note that this discards exactly 75% of the activations in an input volume (due to downsampling by 2 in both width and height). Another slightly less common setting is to use 3x3 receptive fields with a stride of 2, but this makes “fitting” more complicated (e.g., a 32x32x3 layer would require zero padding to be used with a max-pooling layer with 3x3 receptive field and stride 2). It is very uncommon to see receptive field sizes for max pooling that are larger than 3 because the pooling is then too lossy and aggressive. This usually leads to worse performance.
+    >
+    >   --- *cs231n*
+
+-   ***Reducing sizing headaches:*** 
+
+    >   The scheme presented above is pleasing because all the CONV layers preserve the spatial size of their input, while the POOL layers alone are in charge of down-sampling the volumes spatially. In an alternative scheme where we use strides greater than 1 or don’t zero-pad the input in CONV layers, we would have to very carefully keep track of the input volumes throughout the CNN architecture and make sure that all strides and filters “work out”, and that the ConvNet architecture is nicely and symmetrically wired.
+    >
+    >   --- *cs231n*
+
+-   ***Why use stride of 1 in CONV?*** 
+
+    >   Smaller strides work better in practice. Additionally, as already mentioned stride 1 allows us to leave all spatial down-sampling to the POOL layers, with the CONV layers only transforming the input volume depth-wise.
+    >
+    >   --- *cs231n*
+
+-   ***Why use padding?***
+
+    >   In addition to the aforementioned benefit of keeping the spatial sizes constant after CONV, doing this actually improves performance. <u>If the CONV layers were to not zero-pad the inputs and only perform valid convolutions, then the size of the volumes would reduce by a small amount after each CONV, and the information at the borders would be “washed away” too quickly.</u>
+    >
+    >   --- *cs231n*
+
+    ***虽然padding补的是0，但是这样可以使输入图像的边缘也有机会充分接触 Filter 的各处权重***
+
+-    ***Compromising based on <u>memory constraints</u>:***
+
+    >   In some cases (especially early in the ConvNet architectures), the amount of memory can build up very quickly with the rules of thumb presented above. For example, filtering a 224x224x3 image with three 3x3 CONV layers with 64 filters each and padding 1 would create three activation volumes of size [224x224x64]. This amounts to a total of about 10 million activations, or 72MB of memory (per image, for both activations and gradients). Since GPUs are often bottlenecked by memory, it may be necessary to compromise. In practice, people prefer to make the compromise at only the first CONV layer of the network. For example, one compromise might be to use a first CONV layer with filter sizes of 7x7 and stride of 2 (as seen in a ZF net). As another example, an AlexNet uses filter sizes of 11x11 and stride of 4.
+    >
+    >   --- *cs231n*
+
+-   ***Computational Considerations:***
+
+    >   The largest bottleneck to be aware of when constructing ConvNet architectures is the memory bottleneck. Many modern GPUs have a limit of 3/4/6GB memory, with the best GPUs having about 12GB of memory. There are three major sources of memory to keep track of:
+    >
+    >   -   From the intermediate volume sizes: These are the raw number of **activations** at every layer of the ConvNet, and also their gradients (of equal size). Usually, most of the activations are on the earlier layers of a ConvNet (i.e. first Conv Layers). These are kept around because they are needed for backpropagation, but a clever implementation that runs a ConvNet only at test time could in principle reduce this by a huge amount, by only storing the current activations at any layer and discarding the previous activations on layers below.
+    >   -   From the parameter sizes: These are the numbers that hold the network **parameters**, their gradients during backpropagation, and commonly also a step cache if the optimization is using momentum, Adagrad, or RMSProp. Therefore, the memory to store the parameter vector alone must usually be multiplied by a factor of at least 3 or so.
+    >   -   Every ConvNet implementation has to maintain **miscellaneous** memory, such as the image data batches, perhaps their augmented versions, etc.
+    >
+    >   Once you have a rough estimate of the total number of values (for activations, gradients, and misc), the number should be converted to size in GB. Take the number of values, multiply by 4 to get the raw number of bytes (since every floating point is 4 bytes, or maybe by 8 for double precision), and then divide by 1024 multiple times to get the amount of memory in KB, MB, and finally GB. If your network doesn’t fit, a common heuristic to “make it fit” is to decrease the batch size, since most of the memory is usually consumed by the activations.
+    >
+    >   --- *cs231n*
+
+#### Advantage
+
+**简化网络使得非全连接，以减少网络层权重（参数）数，进而削弱网络的特征敏感度，防止过拟合**
+
+#### A Constraint Rule to Hyper-params
+
+设输入2D维数为$N^2$，RF的2D维数为$F^2$（$Hyper$），Padding宽度为$P$（$Hyper$），卷积步长为$S$（$Hyper$），输出2D维数为$N'^2$，各维数均须为正整数，则恒有：
 $$
 N'=\frac{N-F+2P}{S}+1
 $$
 ![e0caa8c2216966d03a45982ffc50b10](images/e0caa8c2216966d03a45982ffc50b10-1693557035121-4.jpg)
+
+#### Special Normalizations for CNN
+
+![image-20230906213347227](images/image-20230906213347227.png)
+
+#### Coding
 
 **`torch.nn.Conv2d`** 是 PyTorch 提供的二维卷积操作。卷积在图像处理和计算机视觉中非常重要，特别是在卷积神经网络中。
 

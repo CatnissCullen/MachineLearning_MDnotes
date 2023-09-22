@@ -126,13 +126,48 @@
         
     -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
 
-In summary:
+    ***COMPARiSON***:
 
--   **Sigmoid** has vanishing gradient problems for very large negative or positive inputs.
--   **ReLU** has zero gradient for negative inputs, leading to the dying ReLU problem.
--   **Leaky ReLU** attempts to mitigate the dying ReLU problem but can still have near-zero gradients for negative inputs if $α$ is very small.
+    -   **Sigmoid** has vanishing gradient problems for very large negative or positive inputs.
+    -   **ReLU** has zero gradient for negative inputs, leading to the dying ReLU problem.
+    -   **Leaky ReLU** attempts to mitigate the dying ReLU problem but can still have near-zero gradients for negative inputs if $α$ is very small.
 
+    
 
+4.  The **Hyperbolic Tangent (tanh)** is an activation function used in neural networks, including RNNs. It's defined as:
+    $$
+    tanh(x) = \frac{e^x-e^{-x}}{e^x+e^{-x}}
+    $$
+    The function maps any real-valued number to the range −1,1−1,1. Here's what it looks like:
+
+    Graph of tanh(x)Graph of tanh(x)
+
+    The tanh function is zero-centered, meaning that negative inputs will be mapped strongly negative and zero inputs will be near zero in the output. This makes it easier for the model to learn from the backpropagated error and can result in faster training.
+
+    Here are some properties of the tanh activation function:
+
+    1.  **Non-linear**: This allows the model to learn from the error and make adjustments, which is essential for learning complex patterns.
+    2.  **Output range**: The output values are bound within the range −1−1 and 11, providing normalized outputs.
+    3.  **Zero-centered**: This helps mitigate issues related to the gradients and speeds up the training process.
+
+    ***COMPARISON:***
+
+    ### ReLU (Rectified Linear Unit)
+
+    1.  **Computational Efficiency**: ReLU is computationally cheaper to calculate than tanh because it doesn't involve any exponential operations. This makes it faster to train large networks.
+    2.  **Sparsity**: ReLU activation leads to sparsity. When the output is zero, it's essentially ignoring that neuron, leading to a sparse representation. Sparsity is beneficial because it makes the network easier to optimize.
+    3.  **Non-vanishing Gradients**: ReLU doesn't suffer from the vanishing gradient problem for positive values, which makes it suitable for deep networks.
+
+    ### tanh (Hyperbolic Tangent)
+
+    1.  **Zero-Centered**: Unlike ReLU, tanh is zero-centered, making it easier for the model to learn in some cases.
+    2.  **Output Range**: The output range of tanh is [−1,1][−1,1], which can be more desirable than [0,∞)[0,∞) for ReLU in certain applications like RNNs.
+    3.  **Vanishing Gradients**: tanh can suffer from vanishing gradients for very large or very small input values, which can slow down learning.
+
+    ### Context-Specific Usage
+
+    -   **RNNs**: tanh is often used because the zero-centered nature of the function can be beneficial for maintaining the state over time steps.
+    -   **CNNs and Fully-Connected Networks**: ReLU is often preferred due to its computational efficiency and because CNNs often deal with larger and deeper architectures where vanishing gradients are less of a concern.
 
 
 
@@ -536,9 +571,24 @@ https://cs231n.github.io/convolutional-networks/#conv
 #### Usage Overview
 
 -   ***从网络内部结构改变模型性能***
+
 -   专用于图像数据（3维矩阵），<u>网络内部保持3维的矩阵格式</u>
+
 -   需要前置 **Spatial Transformer Layers** 
+
 -   据具体问题考虑是否使用 **Pooling**（不是所有数据都能用！！一般图像可以）
+
+-   可以添加 **Residual Block：** ***【RNN也可以用】通过将输入 x 直接加到输出 F(x) 添加梯度捷径***
+
+    ![image-20230909113143212](images/image-20230909113143212.png)
+
+    **作用：① 当权重消失时输出仍有 x ，因此若某层网络是冗余的，即当损失值很大时（尤其加入正则项后），在学习过程中权重会变小但仍保留先前输出，不会给整个模型带来多余负面影响（相当于关闭不需要的网络层原封不动输出其输入）；② 反向传播时提供了更通畅的偏导支路（类似高速公路的作用），加速网络 converge v 速度**
+
+-   其他CNN结构：
+
+    ![image-20230909115203190](images/image-20230909115203190.png)
+
+-   
 
 事实上也可以用CNN指向Fully-Connected Layer前面的部分（只包括Convolutional Layer和Pooling Layer）
 
@@ -700,17 +750,71 @@ class My_Model(nn.Module):
 
 **[PARAMETERS of nn.RNN](https://pytorch.org/docs/stable/generated/torch.nn.RNN.html?highlight=rnn#torch.nn.RNN)**  
 
-**循环神经网络（Recurrent Neural Network，RNN）**是一种专门处理**序列数据**（例如，时间序列数据\<音频>或文本）的神经网络（可以对语音分类，不用一般的分类模型）。RNN与普通的全连接神经网络和卷积神经网络不同，它能够**处理序列长度可变的数据**，<u>在处理每个元素时，它都会记住前面元素的信息</u>。这就是它被称为“循环”的原因。
+#### Application
+
+<img src="images/image-20230909115712333.png" alt="image-20230909115712333" style="zoom: 33%;" /><img src="image-20230909115825005.png" alt="image-20230909115825005" style="zoom: 33%;" />
+
+<img src="images/image-20230909120120367.png" alt="image-20230909120120367" style="zoom: 33%;" /><img src="images/image-20230909115932081.png" alt="image-20230909115932081" style="zoom: 33%;" />
+
+**循环神经网络（Recurrent Neural Network，RNN）**是一种专门处理**序列数据**（例如，时间序列数据\<音频>或文本）的神经网络（可以对语音分类，不用一般的分类模型）。RNN与普通的全连接神经网络和卷积神经网络不同，它能够**处理序列长度可变的数据**，<u>在处理每个元素时，它都会记住前面元素的信息</u>。
+
+**训练时所有输入都给出，并行输入：**
+
+<img src="images/image-20230909141309461.png" alt="image-20230909141309461" style="zoom:50%;" />
+
+**测试时只提供第一步输入，在上一步输出的概率分布中抽样作为其状态的最终输出，并作为下一步的输入（改为one-hot），串行输入：**
+
+<img src="images/image-20230909141728529.png" alt="image-20230909141728529" style="zoom:50%;" />
+
+***此外也可以把非序列数据拆解成序列信息学习，进而优化学习效果：***
+
+<img src="images/image-20230909120400575.png" alt="image-20230909120400575" style="zoom:50%;" />
+
+<img src="images/image-20230909120458610.png" alt="image-20230909120458610" style="zoom:50%;" />
+
+#### Layers & Structure
 
 RNN的基本思想是在神经网络的**隐藏层之间建立循环连接**。**每一步都会有两个输入：当前步的输入数据和上一步的隐藏状态（于是每次model会有两个输出值，训练过程注意左值设为`output, _`）。**然后，这两个输入会被送入网络（通常是一个全连接层或者一些更复杂的结构，如LSTM或GRU单元），然后产生一个输出和新的隐藏状态。这个新的隐藏状态将被用于下一步的计算。
 
-这个过程可以写作如下形式的数学公式：
+这个过程可以写作如下形式的**状态转移方程**：
 $$
-h_t = f(h_{t-1}, x_t)
+h_t = f(h_{t-1}, x_t) = h_{t-1}\cdot W_h + x_t\cdot W_x+bias
 $$
-其中，$h_t$是在时间t的隐藏状态，$x_t$是在时间t的输入，$f$是一个非线性函数，它定义了如何从前一步的隐藏状态和当前的输入计算当前的隐藏状态。
+其中，**$h_t$ 是在时间t的隐藏状态（H元向量）**，$x_t$ 是在时间t的输入（D元向量），$f$ 是一个线性函数，它定义了<u>如何用前一步的隐藏状态和当前的输入计算得到当前的隐藏状态</u>，其中状态权重 $W_h$ （H*H矩阵）、输入权重 $W_x$ （D*H矩阵）和偏差 $bias$ （H元向量）在各时刻（timestep）的**状态转移方程**中保持不变。
 
-RNNs在许多不同的任务中都被证明是非常有用的，特别是在处理语音识别、语言建模、机器翻译等涉及序列到序列的转换的任务中。然而，它们也有一些已知的问题，特别是在处理长序列时，它们往往会遇到所谓的梯度消失和梯度爆炸问题。这些问题已经有一些解决方案，例如**长短期记忆（Long Short-Term Memory，LSTM）网络**和**门控循环单元（Gated Recurrent Unit，GRU）**。
+<img src="images/image-20230909120618449.png" alt="image-20230909120618449" style="zoom:50%;" />
+
+通常还需要一层**非线性激活函数** —— $\tanh$：
+$$
+h_t = \tanh\ (h_{t-1}\cdot W_h + x_t\cdot W_x+bias)
+$$
+此时仅得到了新时刻的状态（通常先求出前向传播求出所有状态存在数组，再另外计算所有输出），**各状态下（时刻）的输出**还需另外根据该状态用得分权重 $W_y$ 计算，输出即不同可能取值的可能性得分（此后还需用 $softmax$ 转化为概率分布值）：
+$$
+y_t=W_y\cdot h_t
+$$
+***各种结构的RNN都满足以上公式，区别仅在于每一步的输入 $x$ 是否有、是否来自上次输出：***
+
+<img src="images/image-20230909140656609.png" alt="image-20230909140656609" style="zoom:50%;" />
+
+<img src="images/image-20230909140633758.png" alt="image-20230909140633758" style="zoom:50%;" />
+
+<img src="images/image-20230909140546263.png" alt="image-20230909140546263" style="zoom:50%;" />
+
+<img src="images/image-20230909141012278.png" alt="image-20230909141012278" style="zoom:50%;" />
+
+**$f_W$是循环使用的！！！！所以称为循环神经网络**
+
+#### Backprop
+
+<img src="images/image-20230909142544735.png" alt="image-20230909142544735" style="zoom:50%;" />
+
+<img src="images/image-20230909142650615.png" alt="image-20230909142650615" style="zoom:50%;" />
+
+#### Porblems
+
+<img src="images/image-20230909164318037.png" alt="image-20230909164318037" style="zoom:50%;" />
+
+处理长序列时，它们往往会遇到所谓的梯度消失和梯度爆炸问题。这些问题已经有一些解决方案，例如**长短期记忆（Long Short-Term Memory，LSTM）网络**和**门控循环单元（Gated Recurrent Unit，GRU）**。
 
 ```python
 class My_Model(nn.Module):
@@ -755,7 +859,15 @@ class My_Model(nn.Module):
 
 ==**CNN常用作图像分类，RNN常用作文本生成，两者结合可以做 Image Captioning：**==
 
-![image-20230805110434586](images/image-20230805110434586.png)
+<img src="images/image-20230805110434586.png" alt="image-20230805110434586" style="zoom:50%;" />
+
+<img src="images/image-20230909144016690.png" alt="image-20230909144016690" style="zoom:50%;" />
+
+<img src="images/image-20230909144440206.png" alt="image-20230909144440206" style="zoom:50%;" />
+
+<img src="images/image-20230909144520905.png" alt="image-20230909144520905" style="zoom:50%;" />
+
+<img src="images/image-20230909144537625.png" alt="image-20230909144537625" style="zoom:50%;" />
 
 ****
 
@@ -778,9 +890,36 @@ Transformer是一种在深度学习和自然语言处理（NLP）中广泛使用
 以下是Transformer架构的一些关键特性：
 
 1.  **自注意力机制（Self-Attention Mechanism）**：这是Transformer最重要的组成部分之一，也被称为Scaled Dot-Product Attention。自注意力机制使模型能够处理输入序列中的每个元素，并确定其与序列中其他元素的关系。
+
 2.  **位置编码（Positional Encoding）**：由于Transformer模型本身没有任何关于元素顺序（即在序列中的位置）的信息，因此我们需要添加位置编码以保留这些信息。
+
+    https://zhuanlan.zhihu.com/p/106644634
+
+    ​	While transformers are able to easily attend to any part of their input, the attention mechanism has no concept of token order. However, for many tasks (especially natural language processing), relative token order is very important. To recover this, the authors add a positional encoding to the embeddings of individual word tokens.
+
+    Let us define a matrix $P \in \mathbb{R}^{l\times d}$, where $P_{ij} = $ 
+    $$
+    \begin{cases}
+    \text{sin}\left(i \cdot 10000^{-\frac{j}{d}}\right) & \text{if j is even} \\
+    \text{cos}\left(i \cdot 10000^{-\frac{(j-1)}{d}}\right) & \text{otherwise} \\
+    \end{cases}
+    $$
+    The positional encoding is created using sine and cosine functions of different frequencies. The sine is applied to even indices in the positional encoding array, and cosine to odd indices.
+
+    Rather than directly passing an input $X \in \mathbb{R}^{l\times d}$ to our network, we instead pass $X + P$.
+
 3.  **多头注意力（Multi-Head Attention）**：在实践中，我们通常会使用多头注意力，它包含了多个并行的自注意力层。这可以让模型同时关注输入序列中的多个不同位置，从而捕获更丰富的信息。
+
+    ​	***Steps:***
+
+    1.  **Linear Layers**: First, you pass your `query`, `key`, and `value` through separate linear layers.
+    2.  **Splitting Heads**: Then you'll split these into multiple heads. In PyTorch, this is often done by reshaping.
+    3.  **Scaled Dot-Product Attention**: For each head, perform the scaled dot-product attention.
+    4.  **Concat Heads**: Concatenate the heads back together.
+    5.  **Final Linear Layer**: Pass through one more linear layer.
+
 4.  **前馈神经网络（Feed Forward Neural Networks）**：每个Transformer层除了注意力子层外，还有一个前馈神经网络，它在每个位置独立地应用于注意力子层的输出。
+
 5.  **残差连接（Residual Connections）和层归一化（Layer Normalization）**：Transformer模型中使用了残差连接和层归一化技术，这些技术有助于训练更深的模型。
 
 训练技巧：
@@ -801,15 +940,47 @@ Transformer模型由于其强大的性能和灵活性，不仅在NLP中得到广
 
 ****
 
-### Residual
-
-常和 **Self-attention** 一起用
-
-****
-
 ### Generative Model
 
 ***（如何假设分布：多元特征样本则对训练集每类样本都分别设为一个高斯分布<可共用方差并共同计算似然函数>，无论是否是二元分类；单元特征样本且二元分布则直接对所有训练集设为一整个伯努利分布）***
+
+#### GAN（生成式对抗模型）
+
+https://github.com/hindupuravinash/the-gan-zoo
+
+https://youtu.be/4OWp0wDu6Xw
+
+https://youtu.be/jNY1WBb8l4U
+
+https://youtu.be/MP0BnVH2yOo
+
+https://youtu.be/wulqhgnDr7E
+
+https://gwern.net/face
+
+$D$ and $G$ play a minimax game in which $D$ tries to
+maximize the probability it correctly classifies reals and fakes
+($logD(x)$), and $G$ tries to minimize the probability that
+$D$ will predict its outputs are fake ($log(1-D(G(z)))$).
+From the paper, the GAN loss function is
+
+$$$
+
+\begin{align}\underset{G}{\text{min}} \underset{D}{\text{max}}V(D,G) = \mathbb{E}**_**{x\sim p**_**{data}(x)}\big*[logD(x)\big]* + \mathbb{E}**_**{z\sim p**_**{z}(z)}\big*[log(1-D(G(z)))\big]*\end{align}
+
+$$$
+
+In theory, the solution to this minimax game is where
+$p_g = p_{data}$, and the discriminator guesses randomly if the
+inputs are real or fake. However, the convergence theory of GANs is
+still being actively researched and in reality models do not always
+train to this point.
+
+<img src="images/image-20230914111616723.png" alt="image-20230914111616723" style="zoom: 25%;" />
+
+<img src="images/image-20230914111758626.png" alt="image-20230914111758626" style="zoom:50%;" />
+
+
 
 ****
 
@@ -892,19 +1063,7 @@ Pointer Network是一种序列到序列（Seq2Seq）模型，它的出现是为�
 
 Pointer Network对于那些输出是输入的一个排列或者子序列的问题特别有用。例如，在车辆路径问题（Vehicle Routing Problem）中，输入是一组城市的坐标，输出是访问所有城市的最短路径，这就是输入的一个排列。在这种情况下，使用Pointer Network比使用传统的Seq2Seq模型更有效。
 
-****
 
-### Generator
-
-#### GAN（生成式对抗模型）
-
-https://youtu.be/4OWp0wDu6Xw
-
-https://youtu.be/jNY1WBb8l4U
-
-https://youtu.be/MP0BnVH2yOo
-
-https://youtu.be/wulqhgnDr7E
 
 
 

@@ -279,6 +279,18 @@ $1−(y′∗y)$ 中的 $1$ 为**距离因子**，非0即可，与实际的最�
 
 
 
+## Wasserstein Distance
+
+***专用于概率分布生成模型，求两概率分布间的差距（生成分布相对实际分布\<抽样获得>的Loss）***
+
+用于改进GAN中JS divergence在两分布完全不重叠的时候为常数（loss梯度消失）的问题，但求WD的过程更复杂，本身就是优化问题
+
+<img src="images/image-20230914105946935.png" alt="image-20230914105946935" style="zoom:50%;" />
+
+<img src="images/image-20230914110434105.png" alt="image-20230914110434105" style="zoom:50%;" />
+
+<img src="images/2fd89ddc8a984da4729c14b01759c41e.jpg" alt="image-20230914110618374" style="zoom:50%;" />
+
 
 
 ## To Prevent Overfitting: L2 Regularization Term

@@ -159,9 +159,9 @@ $exp:$
     
     
 
-## For Precision
+## For Precision (Numerical  Problem)
 
-### Numerical  Problem
+### Normalization Trick
 
 Dividing large numbers can be numerically unstable, so it is important to use a normalization trick. 
 
@@ -183,6 +183,15 @@ Dividing large numbers can be numerically unstable, so it is important to use a 
 >   f -= np.max(f) # f becomes [-666, -333, 0]
 >   p = np.exp(f) / np.sum(np.exp(f)) # safe to do, gives the correct answer
 >   ```
+
+### Log-Exponential Trick
+
+```python
+# Replace
+x = pow(y, z)
+# With
+x = torch.exp(z * math.log(y))
+```
 
 
 

@@ -1,16 +1,16 @@
 # Model (forward pass)
 
-***万物皆可学习！（数据处理函数、距离度量函数、模型本身 ......）***
+***万物皆可学习！（数据处理函数、距离度量函数、损失函数、模型本身 ......）***
 
 
 
 ## Quick Understanding of Deep Learning
 
--   Teacher: Us
+-   Trainer: Us
 
 -   Student: Machine (Computer)
 
--   **Hints before learning:** 
+-   **Plan before training (Need to be appropriate for the applicaion and easy to learn):** 
 
     a Function with Parameters to be Learnt & some Hyper-parameters (MANUALLY PROVIDED) => $Building\ the\ Model$
 
@@ -24,7 +24,7 @@
 
     ==To come up with the right Function is the key stage of Deep Learning!!!==
 
--   **Data for checking learning effect:** 
+-   **Data for checking learning effect (Homework):**  
 
     a Validation Set => $Validation\ Time$
 

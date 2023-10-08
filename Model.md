@@ -752,7 +752,7 @@ class My_Model(nn.Module):
 
 #### Application
 
-<img src="images/image-20230909115712333.png" alt="image-20230909115712333" style="zoom: 33%;" /><img src="image-20230909115825005.png" alt="image-20230909115825005" style="zoom: 33%;" />
+<img src="images/image-20230909115712333.png" alt="image-20230909115712333" style="zoom: 33%;" /><img src="images/image-20230909115825005.png" alt="image-20230909115825005" style="zoom: 33%;" />
 
 <img src="images/image-20230909120120367.png" alt="image-20230909120120367" style="zoom: 33%;" /><img src="images/image-20230909115932081.png" alt="image-20230909115932081" style="zoom: 33%;" />
 

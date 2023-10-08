@@ -8,7 +8,7 @@
 
     
     
-    <img src="images/image-20230907110741675.png" alt="image-20230907110741675" style="zoom:30%;"/>                              <img src="image-20230907110909181.png" alt="image-20230907110909181" style="zoom: 40%;" />
+    <img src="images/image-20230907110741675.png" alt="image-20230907110741675" style="zoom:30%;"/>                              <img src="images/image-20230907110909181.png" alt="image-20230907110909181" style="zoom: 40%;" />
     
     
     

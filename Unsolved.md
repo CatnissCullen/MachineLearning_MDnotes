@@ -44,3 +44,11 @@ Understand every pixel in an image, reconstructing the entire world.
 Make machine generate a reasonable story from an image based on its understanding. (visual genome)
 
 ![image-20230803150831468](images/image-20230803150831468.png)
+
+
+
+## Stochasticity in `cGAN`
+
+-   input random noise z => tend to ignore z
+-   use dropout as randomness => better but still little stochasticity 
+

@@ -475,7 +475,7 @@ My_Transforms = transforms.Compose([
 
 `torchvision.transforms.functional` 模块是一组函数，它们对图像进行低级变换。**这些函数与`torchvision.transforms`模块中的类相对应，但以函数形式提供**。
 
-例如，我们可以使用 `torchvision.transforms.Resize` 类来创建一个调整图像大小的变换对象，然后我们可以将图像传递给这个对象以调整其大小。另一方面，我们可以直接使用 `torchvision.transforms.functional.resize` 函数来调整图像的大小。
+例如，我们可以使用 `torchvision.transforms.Resize` 类来创建一个调整图像大小的变换对象，然后我们可以将图像传递给这个对象以调整其大小。或者可以直接使用 `torchvision.transforms.functional.resize` 函数来调整图像的大小。
 
 这个模块通常在你需要对图像**执行更灵活或更具体的变换**时使用。
 

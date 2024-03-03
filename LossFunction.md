@@ -170,9 +170,13 @@ See [wiki](http://en.wikipedia.org/wiki/Numerical_differentiation) for details.
 
 
 
-## MSE Loss
+## LSGAN：MSE Loss
 
 它通常用于**回归问题**。在回归问题中，我们试图预测一个连续的数值，比如预测房价、股票价格等。MSE会计算模型预测值与真实值之间的平均平方差，衡量预测值与真实值之间的偏差。MSE的值越小，说明模型的预测效果越好。
+
+也用于**LSGAN**。
+
+### Coding
 
 ```python
 Loss = torch.nn.MSELoss()
@@ -180,19 +184,15 @@ Loss = torch.nn.MSELoss()
 
 
 
-## Cross Entropy Loss
+## Vanilla GAN：Cross Entropy Loss
 
 它通常用于分类问题。在分类问题中，我们试图预测一个离散的类别标签，如图像分类、文本分类等。交叉熵损失衡量的是模型预测的概率分布与真实的概率分布之间的距离，是衡量模型预测概率与真实情况一致性的一个度量。交叉熵损失值越小，说明模型的预测效果越好。
 
 在多分类问题中，我们常常使用**softmax**函数将网络的输出**转换为概率分布**。这个预估的概率分布Q与数据的真实分布P（通常是one-hot编码，只有真实类别的位置为1，其余为0）之间的差异，就可以用交叉熵损失来度量：
 $$
-L = - Σ P(x) log Q(x)
+L = H(P,Q) = - Σ P(x) log Q(x)
 $$
 其中，∑表示对所有可能的事件求和，p(x)是真实分布下事件x发生的概率，q(x)是预测分布下事件x发生的概率。
-
-```python
-Loss = torch.nn.CrossEntropy()  # 已经包含Softmax（自动将一层Softmax加到模型输出后）！！！！！！！
-```
 
 这就是交叉熵损失。你可以看到，它在形式上就是P和Q的交叉熵。如果网络的预测很准确（也就是说，Q接近于P），那么交叉熵损失就会很小。反之，如果网络的预测偏离了真实情况（也就是说，Q远离了P），那么交叉熵损失就会变大。
 
@@ -206,12 +206,34 @@ Loss = torch.nn.CrossEntropy()  # 已经包含Softmax（自动将一层Softmax�
 
 那么，对于这张图片，交叉熵就是：`Cross-Entropy = - (1 * log(0.7) + 0 * log(0.2) + 0 * log(0.1))`。可以看到，如果你的预测分布完全正确，那么交叉熵就为0，因为`-log(1) = 0`；但如果你的预测分布完全错误，比如你预测这张图片是猫的概率为0，那么交叉熵就会变为无穷大，因为`-log(0)`为无穷大。
 
+>   ## KL散度
+>
+>   $$
+>   \mathcal{D}_{KL}(P||Q) = \sum_xP(x)\log\frac{P(x)}{Q(x)}
+>   $$
+
+### Coding
+
+```python
+Loss = torch.nn.CrossEntropy()  # 多分类交叉熵损失；已经包含Softmax（自动将一层Softmax加到模型输出后）！！！！！！！
+# or
+Loss = torch.nn.BCEWithLogitsLoss()  # 二分类交叉熵损失（BinaryCrossEntropy）已经包含Sigmoid（自动将一层Sigmoid加到模型输出后）！！！！！！！
+```
+
 
 
 ## Use Maximum Likelihood instead
 
-**似然函数（Likelihood）**在机器学习中的含义：建立的模型（所假设的分布）能生成（generate，即sample\<`v.`>，抽样出）训练集的可能性（likelihood），即训练集属于该假设的分布的可能性、训练集真实所属分布与该假设的分布的相似度**（事实上似然函数取对数后的相反数就是 Cross Entropy！！！）**。
+**似然函数（Likelihood）**在机器学习中的含义：建立的模型（所假设的分布）能生成（generate，即sample\<`v.`>，抽样出）训练集的可能性（likelihood），即训练集属于该假设的分布的可能性、训练集真实所属分布与该假设的分布的相似度。
 
+常用的似然函数有对数似然函数：
+$$
+Likelihood = \sum_xP(x)\log Q(x)
+$$
+也常取负值（负对数似然）当成损失值（对数损失）优化：
+$$
+\mathcal{Loss} = \sum_x-P(x)\log Q(x)
+$$
 ![image-20230723114252239](images/image-20230723114252239.png)
 
 对分类问题采用概率模型，便可以使用连续的**似然函数**的值作为模型评估对象，通过优化预估分布函数和其参数的估计公式（关于训练集的统计量）来使似然函数最大即可实现对模型本身的优化。
@@ -279,20 +301,6 @@ $1−(y′∗y)$ 中的 $1$ 为**距离因子**，非0即可，与实际的最�
 
 
 
-## Wasserstein Distance
-
-***专用于概率分布生成模型，求两概率分布间的差距（生成分布相对实际分布\<抽样获得>的Loss）***
-
-用于改进GAN中JS divergence在两分布完全不重叠的时候为常数（loss梯度消失）的问题，但求WD的过程更复杂，本身就是优化问题
-
-<img src="images/image-20230914105946935.png" alt="image-20230914105946935" style="zoom:50%;" />
-
-<img src="images/image-20230914110434105.png" alt="image-20230914110434105" style="zoom:50%;" />
-
-<img src="images/2fd89ddc8a984da4729c14b01759c41e.jpg" alt="image-20230914110618374" style="zoom:50%;" />
-
-
-
 ## To Prevent Overfitting: L2 Regularization Term
 
 L2正则化是一种常用的防止过拟合的技术，也被称为权重衰减。它的基本思想是通过在损失函数中添加一个额外的项来惩罚大的权重值，从而**防止模型过于复杂**。
@@ -327,3 +335,31 @@ $$
 在这里，$W$ 代表模型的权重矩阵，<u>$λ$ 是一个超参数，**或者用交叉验证法估计**，控制**正则化的强度（regularization strength）**，即**经验误差和网络复杂度的平衡因子**</u>。请注意，<u>**正则化项 $||W||^2$ 是所有权重平方的和（矩阵所对应划分超平面到空间原点的欧氏距离，即矩阵的 L2 范数）**</u>。
 
 通过这种方式，$L2$ 正则化鼓励模型使用较小的权重（变为更简单的模型）。这通常会导致模型的复杂度降低，使得模型对于训练数据的小的变化不那么敏感，从而**提高了模型的泛化能力**。
+
+
+
+## WGAN：Wasserstein Distance
+
+***专用于概率分布生成模型，求两概率分布间的差距（生成分布相对实际分布\<抽样获得>的Loss）***
+
+详解：[**WGAN**](https://zhuanlan.zhihu.com/p/25071913) [**WGAN-GP**](https://zhuanlan.zhihu.com/p/52799555)
+
+用于**改进GAN中JS divergence在两分布完全不重叠的时候为常数（loss梯度消失）的问题**，但求WD的过程更复杂，本身就是优化问题
+
+<img src="images/image-20230914105946935.png" alt="image-20230914105946935" style="zoom:50%;" />
+
+<img src="images/image-20230914110434105.png" alt="image-20230914110434105" style="zoom:50%;" />
+
+**WGAN** 和改进的 **WGAN-GP**
+
+<img src="images/2fd89ddc8a984da4729c14b01759c41e.jpg" alt="image-20230914110618374" style="zoom:50%;" />
+
+### Coding
+
+WGAN：本身是一个优化问题，但最终简化的算法不复杂
+
+![image-20240205184357851](images/image-20240205184357851.png)
+
+WGAN-GP：
+
+![image-20240205184634484](images/image-20240205184634484.png)

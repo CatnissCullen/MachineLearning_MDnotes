@@ -2,7 +2,10 @@
 
 ****
 
+## Tips
 
+-   **deeper:** 能减少偏差，增加覆盖到真实模型的可能性；更难训练（用ResBlock解决），耗时更长
+-   **s**
 
 ## Encoder-Decoder
 

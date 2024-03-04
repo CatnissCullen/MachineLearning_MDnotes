@@ -53,17 +53,23 @@
         >   ### Affine Transformation in Neural Networks
         >
         >   1.  **Linear Transformation**: This involves multiplying the input by a weight matrix. If you have an input vector $X$ and a weight matrix $W$, the linear transformation is $X⋅W$.
+        >
+        >       ***=> scale the vectors***
+        >
         >   2.  **Translation (Bias Addition)**: After the linear transformation, a bias vector is added to the result. If the bias vector is $b$, the full affine transformation is $X⋅W+b$.
+        >
+        >       ***=> offset the vectors***
         >
         >   Affine Layers are usually **FC** Layers.
 
     -   *(OPTIONAL)* **`Batch Normalization`** or **`Layer Normalization`** ➡️
 
-    -   **`Non-Linear Activation Func`** (Like a firing rate of impulses carried away from cell body; most similar one to the actual brain is the **`ReLU`**, which is most commonly used) ➡️
+    -   **`Non-Linear Activation Func`** (Like a firing rate of impulses carried away from cell body; most similar one to the actual brain is the **`ReLU`**, which is most commonly used) **=> works on non-linear features, bend the vectors (for larger distances and better classification)**➡️
 
     -   *(OPTIONAL)* **`Dropout`** ➡️
 
 -   **Stack " a `Layer`" $N$ times until it's a complex enough non-linear function (but need to trade-off with difficulty in tackling overfitting)** ➡️
+
 -   The **`Final Layer`**
     -   **`Affine Net`**➡️
     -   (OPTIONAL, <u>NEEDED IN CLASSIFICATION</u>) **`Softmax`**
@@ -80,6 +86,55 @@
 
 
 
+## Quick understanding of Neurons and Layers
+
+**“神经元” = 权重矩阵&偏移量（`nn.Linear`，权重数乘特征值=>向量伸缩，偏移量加减特征值=>向量平移） + 激活函数（非线性函数，改变特征值间线性关系=>向量弯曲）**
+
+每个神经元负责接收 $X$ 输入的所有特征值 $x_i$ 并处理成单个特征值输出。
+
+隐藏层神经元个数就是隐藏层整体输出的维度数，所以每个隐藏层都是一个改变原始输入 $X$ 的维度的机会，即能够对 $X$ 做仿射变换，把可能在原来维度上与其他样本线性不可分的 $X$ 变换到与其他样本线性可分的维度上。
+
+### 1 neuron per layer
+
+只能处理这种分类：
+
+![760b66247c4df1e98cb41ec363b3257](images/760b66247c4df1e98cb41ec363b3257.jpg)
+
+遇到这种分类须变换到二维：
+
+![0266d79ef043b47f35d3a8678572216](images/0266d79ef043b47f35d3a8678572216.jpg)
+
+变换后：
+
+![7d8afdbc0fbf801f0b8ce2d9abbfb7b](images/7d8afdbc0fbf801f0b8ce2d9abbfb7b.jpg)
+
+### 2 neurons per layer
+
+只能处理这种分类：
+
+![609a9a12876b37e8fd707681af347de](images/609a9a12876b37e8fd707681af347de.jpg)
+
+遇到这种分类须变换到三维：
+![98c6518628582a7a69760d7e05d49c1](images/98c6518628582a7a69760d7e05d49c1.jpg)
+
+变换后：
+
+![e7edb4ff9122a5ecb7cf41c3fb06b6f](images/e7edb4ff9122a5ecb7cf41c3fb06b6f.jpg)
+
+更高维情况同理。
+
+### More layers
+
+即便有了变换到高维的网络层，也不一定能成功分类，因为有的超平面分界在其所在高维空间内也很难被找到，因此需要增加网络层进一步在同维空间内变换或变换到更高维空间，以此更好拉开被分类的两类数据点（向量）之间的距离。
+
+此外，分层学习可以独立设计不同层的不同架构以学习不同特征，同时越深的层可以学习到越难学习（越抽象）的特征，以提高学习能力与训练效率。
+
+从偏差、方差角度看，就是通过增加网络层拉开数据点间距，来扩大中间可寻找真实超平面分界的空间，即扩大对真实超平面分界的覆盖，以降低优化结果与真实超平面分界间的方差、降低寻找到真实超平面的难度。
+
+![61bd22ff661aafa4a228822423f6091](images/61bd22ff661aafa4a228822423f6091.jpg)
+
+解决深层网络偏差的问题（网络退化）及梯度消失问题使用 ResNet，详见 **<u>Evaluation (of Generalization --- the closeness to ground-truth) & Solutions</u>**
+
 
 
 ## Activation Function
@@ -91,13 +146,14 @@
         f(x)=\frac{1}{1+e^{-\beta x}}
         $$
         
--   **Gradient**: 
-    $$
-    f'(x)=\beta f(x)(1-f(x))
-    $$
+    
+    -   **Gradient**: 
+        $$
+        f'(x)=\beta f(x)(1-f(x))
+        $$
     
     -   **Problematic Region**: The gradient becomes close to zero for very large negative or positive values of $x$. In these regions, the sigmoid function saturates, meaning that it becomes very flat. This leads to vanishing gradients during backpropagation, which can slow down or halt training.
-
+    
 2.  **ReLU (Rectified Linear Unit)**:
 
     -   **Function**:
@@ -105,88 +161,107 @@
         f(x)=max(0,x)
         $$
         
--   **Gradient**: 
-    $$
-    f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
-    $$
     
-    -   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
-
-3.  **Leaky ReLU**:
-
-    -   **Function**: 
-        $$
-        f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
-        $$
-        
     -   **Gradient**: 
         $$
-        f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
+        f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
         $$
-        
-    -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
-
-    ***COMPARISON***:
-
-    -   **Sigmoid** has vanishing gradient problems for very large negative or positive inputs.
-    -   **ReLU** has zero gradient for negative inputs, leading to the dying ReLU problem.
-    -   **Leaky ReLU** attempts to mitigate the dying ReLU problem but can still have near-zero gradients for negative inputs if $α$ is very small.
-
+    
+    -   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
     
 
-4.  **Swish**（ReLU的替代）:
+3.   **[SoftMax](https://blog.csdn.net/bitcarmanlee/article/details/82320853)**
 
-    -   **Function**:
-        $$
-        Swish(x)=x\cdot Sigmoid(x)
-        $$
+     -   **Function:**
+         $$
+         f(x_j) = \frac{e^{x_j}}{\sum^{n}_{i=1} e^{x_i}}
+         $$
 
-    -   **非单调性**：Swish是一个平滑的、非单调的函数。这与传统的ReLU函数（线性且单调）形成对比。
+     -   **Gradient: ** $EntropyLoss = -\ln y_j$
+         $$
+         EntropyLoss'(x) = y_i-1
+         $$
 
-    -   **有界的负值**：与ReLU不同，Swish函数在负值时不是完全为零，它允许负值通过，这可能有助于保持神经网络中更多的信息流。
+4.   **Leaky ReLU**:
 
-    -   **自适应**：通过引入 $\beta$ 参数，Swish函数可以在训练过程中自适应地调整其形状，这在某些情况下可能有助于提升模型性能。
+     -   **Function**: 
+         $$
+         f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
+         $$
+         
 
-    -   和ReLU相比的优势：
+     -   **Gradient**: 
+         $$
+         f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
+         $$
+         
 
-        -   **性能提升**：在一系列的基准测试和任务中，Swish函数展示了与ReLU相比在深度网络中的性能提升，尤其是在深度较大的网络结构中。
-        -   **平滑梯度**：Swish函数由于其平滑性质，可以提供更稳定的梯度流，有利于深度学习模型的训练。
-        -   **灵活性**：Swish函数通过参数 $\beta$ 提供了额外的灵活性，这一参数可以根据任务需求进行调整或通过学习得到。
+     -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
 
-5.  The **Hyperbolic Tangent (tanh)** is an activation function used in neural networks, including RNNs. It's defined as:
-    $$
-    tanh(x) = \frac{e^x-e^{-x}}{e^x+e^{-x}}
-    $$
-    The function maps any real-valued number to the range −1,1−1,1. Here's what it looks like:
 
-    Graph of tanh(x)Graph of tanh(x)
+***COMPARISON***:
 
-    The tanh function is zero-centered, meaning that negative inputs will be mapped strongly negative and zero inputs will be near zero in the output. This makes it easier for the model to learn from the backpropagated error and can result in faster training.
+-   **Sigmoid** has vanishing gradient problems for very large negative or positive inputs.
+-   **ReLU** has zero gradient for negative inputs, leading to the dying ReLU problem.
+-   **Leaky ReLU** attempts to mitigate the dying ReLU problem but can still have near-zero gradients for negative inputs if $α$ is very small.
 
-    Here are some properties of the tanh activation function:
+5.   **Swish**（ReLU的替代）:
 
+     -   **Function**:
+         $$
+         Swish(x)=x\cdot Sigmoid(x)
+         $$
+
+
+     -   **非单调性**：Swish是一个平滑的、非单调的函数。这与传统的ReLU函数（线性且单调）形成对比。
+
+
+     -   **有界的负值**：与ReLU不同，Swish函数在负值时不是完全为零，它允许负值通过，这可能有助于保持神经网络中更多的信息流。
+
+
+     -   **自适应**：通过引入 $\beta$ 参数，Swish函数可以在训练过程中自适应地调整其形状，这在某些情况下可能有助于提升模型性能。
+
+
+     -   和ReLU相比的优势：
+
+         -   **性能提升**：在一系列的基准测试和任务中，Swish函数展示了与ReLU相比在深度网络中的性能提升，尤其是在深度较大的网络结构中。
+             -   **平滑梯度**：Swish函数由于其平滑性质，可以提供更稳定的梯度流，有利于深度学习模型的训练。
+             -   **灵活性**：Swish函数通过参数 $\beta$ 提供了额外的灵活性，这一参数可以根据任务需求进行调整或通过学习得到。
+
+6.   The **Hyperbolic Tangent (tanh)** is an activation function used in neural networks, including RNNs. It's defined as:
+
+$$
+tanh(x) = \frac{e^x-e^{-x}}{e^x+e^{-x}}
+$$
+-   The function maps any real-valued number to the range −1,1−1,1. Here's what it looks like:
+
+-   Graph of tanh(x)Graph of tanh(x)
+
+-   The tanh function is zero-centered, meaning that negative inputs will be mapped strongly negative and zero inputs will be near zero in the output. This makes it easier for the model to learn from the backpropagated error and can result in faster training.
+
+-   Here are some properties of the tanh activation function:
     1.  **Non-linear**: This allows the model to learn from the error and make adjustments, which is essential for learning complex patterns.
     2.  **Output range**: The output values are bound within the range −1−1 and 11, providing normalized outputs.
     3.  **Zero-centered**: This helps mitigate issues related to the gradients and speeds up the training process.
 
-    ***COMPARISON:***
+***COMPARISON:***
 
-    ### ReLU (Rectified Linear Unit)
+### ReLU (Rectified Linear Unit)
 
-    1.  **Computational Efficiency**: ReLU is computationally cheaper to calculate than tanh because it doesn't involve any exponential operations. This makes it faster to train large networks.
-    2.  **Sparsity**: ReLU activation leads to sparsity. When the output is zero, it's essentially ignoring that neuron, leading to a sparse representation. Sparsity is beneficial because it makes the network easier to optimize.
-    3.  **Non-vanishing Gradients**: ReLU doesn't suffer from the vanishing gradient problem for positive values, which makes it suitable for deep networks.
+1.  **Computational Efficiency**: ReLU is computationally cheaper to calculate than tanh because it doesn't involve any exponential operations. This makes it faster to train large networks.
+2.  **Sparsity**: ReLU activation leads to sparsity. When the output is zero, it's essentially ignoring that neuron, leading to a sparse representation. Sparsity is beneficial because it makes the network easier to optimize.
+3.  **Non-vanishing Gradients**: ReLU doesn't suffer from the vanishing gradient problem for positive values, which makes it suitable for deep networks.
 
-    ### tanh (Hyperbolic Tangent)
+### tanh (Hyperbolic Tangent)
 
-    1.  **Zero-Centered**: Unlike ReLU, tanh is zero-centered, making it easier for the model to learn in some cases.
-    2.  **Output Range**: The output range of tanh is [−1,1][−1,1], which can be more desirable than [0,∞)[0,∞) for ReLU in certain applications like RNNs.
-    3.  **Vanishing Gradients**: tanh can suffer from vanishing gradients for very large or very small input values, which can slow down learning.
+1.  **Zero-Centered**: Unlike ReLU, tanh is zero-centered, making it easier for the model to learn in some cases.
+2.  **Output Range**: The output range of tanh is [−1,1][−1,1], which can be more desirable than [0,∞)[0,∞) for ReLU in certain applications like RNNs.
+3.  **Vanishing Gradients**: tanh can suffer from vanishing gradients for very large or very small input values, which can slow down learning.
 
-    ### Context-Specific Usage
+### Context-Specific Usage
 
-    -   **RNNs**: tanh is often used because the zero-centered nature of the function can be beneficial for maintaining the state over time steps.
-    -   **CNNs and Fully-Connected Networks**: ReLU is often preferred due to its computational efficiency and because CNNs often deal with larger and deeper architectures where vanishing gradients are less of a concern.
+-   **RNNs**: tanh is often used because the zero-centered nature of the function can be beneficial for maintaining the state over time steps.
+-   **CNNs and Fully-Connected Networks**: ReLU is often preferred due to its computational efficiency and because CNNs often deal with larger and deeper architectures where vanishing gradients are less of a concern.
 
 
 
@@ -317,7 +392,7 @@ https://www.zhihu.com/question/347358336
 
     <img src="images/image-20230724180100173.png" alt="image-20230724180100173" style="zoom:40%;" />
 
-    **结论：单层参数多、非线性的模型（单个复杂函数），最理想优化结果和真实情况间 Loss （即Bias）更小，但实际的 training 很难找到好的结果，因为参数多意味着函数空间更大更难优化。**
+    **结论：单层参数多、非线性的模型（单个复杂函数），最理想优化结果和真实情况间 Loss （即Bias）更小，但实际的 training 很难找到好的结果，因为参数多意味着函数空间更大更难优化，且非线性函数比线性函数难优化 。**
 
 ### 解决
 
@@ -326,8 +401,7 @@ https://www.zhihu.com/question/347358336
 一般是针对大方差做改进：
 
 -   更多训练数据，以让模型学习更丰富的特征，克服大方差
--   正则化，提前惩罚模型以防止 overfit
--   ......（见下一节）
+-   各种正则化，提前惩罚模型以防止 overfit（见下一节）
 -   **改进模型：使用多层线性函数（深度神经网络），而非单层非线性函数**，这样使用反向传播分别更新各层（各维度）的参数，就比单层的很多参数都在同一维度更容易训练
 
 ### 深度神经网络的问题
@@ -347,7 +421,7 @@ https://www.zhihu.com/question/347358336
 
 ### 总结
 
-<img src="images/image-20240209153821466.png" alt="image-20240209153821466" style="zoom: 30%;" />
+![0971bf528ff500b33469ba7387ac3c8](images/image-20240209153821466.png)
 
 
 

@@ -146,7 +146,6 @@
         f(x)=\frac{1}{1+e^{-\beta x}}
         $$
         
-    
     -   **Gradient**: 
         $$
         f'(x)=\beta f(x)(1-f(x))
@@ -161,7 +160,6 @@
         f(x)=max(0,x)
         $$
         
-    
     -   **Gradient**: 
         $$
         f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
@@ -169,7 +167,6 @@
     
     -   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
     
-
 3.   **[SoftMax](https://blog.csdn.net/bitcarmanlee/article/details/82320853)**
 
      -   **Function:**
@@ -189,13 +186,11 @@
          f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
          $$
          
-
      -   **Gradient**: 
          $$
          f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
          $$
          
-
      -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
 
 
@@ -223,7 +218,7 @@
 
 
      -   和ReLU相比的优势：
-
+    
          -   **性能提升**：在一系列的基准测试和任务中，Swish函数展示了与ReLU相比在深度网络中的性能提升，尤其是在深度较大的网络结构中。
              -   **平滑梯度**：Swish函数由于其平滑性质，可以提供更稳定的梯度流，有利于深度学习模型的训练。
              -   **灵活性**：Swish函数通过参数 $\beta$ 提供了额外的灵活性，这一参数可以根据任务需求进行调整或通过学习得到。

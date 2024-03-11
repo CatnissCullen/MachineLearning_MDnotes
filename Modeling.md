@@ -78,11 +78,11 @@
 
 ![2e775eb44e3a0edeb4debd1f3a309cb](images/2e775eb44e3a0edeb4debd1f3a309cb.jpg)
 
+🔼***W 列数是输入维度，W 行数是输出维度（神经元个数）*** 
+
 ![image-20230819181131837](images/image-20230819181131837.png)
 
 <img src="images/image-20230819181020242.png" alt="image-20230819181020242" style="zoom:50%;" />
-
-<img src="images/image-20230819181206616.png" alt="image-20230819181206616" style="zoom:50%;" />
 
 
 
@@ -93,6 +93,8 @@
 每个神经元负责接收 $X$ 输入的所有特征值 $x_i$ 并处理成单个特征值输出。
 
 隐藏层神经元个数就是隐藏层整体输出的维度数，所以每个隐藏层都是一个改变原始输入 $X$ 的维度的机会，即能够对 $X$ 做仿射变换，把可能在原来维度上与其他样本线性不可分的 $X$ 变换到与其他样本线性可分的维度上。
+
+**具体实现中，可以把卷积核（权重矩阵）的个数看作神经元个数，卷积层输出的特征图的通道数即该层的神经元个数。**
 
 ### 1 neuron per layer
 
@@ -257,6 +259,22 @@ $$
 
 -   **RNNs**: tanh is often used because the zero-centered nature of the function can be beneficial for maintaining the state over time steps.
 -   **CNNs and Fully-Connected Networks**: ReLU is often preferred due to its computational efficiency and because CNNs often deal with larger and deeper architectures where vanishing gradients are less of a concern.
+
+
+
+## Embedding Layers
+
+***目的：通过非标签的形式输入条件；把不同条件的影响解耦到输入数据的不同方面（比率&偏差），方便调试模型***
+
+**方式一：**分别以scalar和bias的形式把两个条件张量在同一层嵌入数据（一般在Normalization后）
+
+>   例：
+>   $$
+>   AdaGN(h,y)=y_s\cdot GroupNorm(h)+y_b
+>   $$
+>   $y=[y_s,y_b]$， $y_s$ 是时间步嵌入张量， $y_b$ 是类别标签嵌入张量， $h$ 是前一层卷积层的结果
+
+**方式二：**在不同层以scalar（或bias）的形式把多个条件张量（两个以上）依次嵌入数据（一般在Normalization后）
 
 
 
@@ -720,6 +738,10 @@ https://cs231n.github.io/convolutional-networks/#conv
 
 <img src="images/image-20230901144201391.png" alt="image-20230901144201391" style="zoom: 50%;" />
 
+**图像分类器： **
+
+<img src="images/4e00cbf4065675c605cf7cb04a8805c-1709783349388-2.jpg" alt="4e00cbf4065675c605cf7cb04a8805c" style="zoom:150%;" />
+
 **变体：**图像数据通常先前置一层单独的 CONV ，然后再以 **RELU-CONV-NORM** 为单位重叠
 
 #### Usage Overview
@@ -741,8 +763,6 @@ https://cs231n.github.io/convolutional-networks/#conv
 -   其他CNN结构：
 
     ![image-20230909115203190](images/image-20230909115203190.png)
-
--   
 
 事实上也可以用CNN指向Fully-Connected Layer前面的部分（只包括Convolutional Layer和Pooling Layer）
 

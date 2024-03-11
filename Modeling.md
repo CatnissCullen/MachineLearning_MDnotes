@@ -141,60 +141,65 @@
 
 ## Activation Function
 
-1.  **Sigmoid**:
+### Sigmoid
 
-    -   **Function**: 
-        $$
-        f(x)=\frac{1}{1+e^{-\beta x}}
-        $$
-        
-    -   **Gradient**: 
-        $$
-        f'(x)=\beta f(x)(1-f(x))
-        $$
+-   **Function**: 
+    $$
+    f(x)=\frac{1}{1+e^{-\beta x}}
+    $$
     
-    -   **Problematic Region**: The gradient becomes close to zero for very large negative or positive values of $x$. In these regions, the sigmoid function saturates, meaning that it becomes very flat. This leads to vanishing gradients during backpropagation, which can slow down or halt training.
+-   **Gradient**: 
+    $$
+    f'(x)=\beta f(x)(1-f(x))
+    $$
+
+-   **Problematic Region**: The gradient becomes close to zero for very large negative or positive values of $x$. In these regions, the sigmoid function saturates, meaning that it becomes very flat. This leads to vanishing gradients during backpropagation, which can slow down or halt training.
+
+### ReLU (Rectified Linear Unit)
+
+-   **Function**:
+    $$
+    f(x)=max(0,x)
+    $$
     
-2.  **ReLU (Rectified Linear Unit)**:
+-   **Gradient**: 
+    $$
+    f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
+    $$
 
-    -   **Function**:
-        $$
-        f(x)=max(0,x)
-        $$
-        
-    -   **Gradient**: 
-        $$
-        f'(x)=\{^{1\quad if\ x>0}_{0\quad if\ x\le0}
-        $$
+-   **Computational Efficiency**: ReLU is computationally cheaper to calculate than tanh because it doesn't involve any exponential operations. This makes it faster to train large networks.
+
+-   **Sparsity**: ReLU activation leads to sparsity. When the output is zero, it's essentially ignoring that neuron, leading to a sparse representation. Sparsity is beneficial because it makes the network easier to optimize.
+
+-   **Non-vanishing Gradients**: ReLU doesn't suffer from the vanishing gradient problem for positive values, which makes it suitable for deep networks.
+
+-   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
+
+### [SoftMax](https://blog.csdn.net/bitcarmanlee/article/details/82320853)
+
+-   **Function:**
+    $$
+    f(x_j) = \frac{e^{x_j}}{\sum^{n}_{i=1} e^{x_i}}
+    $$
+
+-   **Gradient: ** $EntropyLoss = -\ln y_j$
+    $$
+    EntropyLoss'(x) = y_i-1
+    $$
+
+### Leaky ReLU
+
+-   **Function**: 
+    $$
+    f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
+    $$
     
-    -   **Problematic Region**: The gradient is exactly zero for negative inputs. This can lead to "dead neurons" where once a neuron gets a negative input, it always outputs zero, and its weights never get updated. This is known as the dying ReLU problem.
+-   **Gradient**: 
+    $$
+    f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
+    $$
     
-3.   **[SoftMax](https://blog.csdn.net/bitcarmanlee/article/details/82320853)**
-
-     -   **Function:**
-         $$
-         f(x_j) = \frac{e^{x_j}}{\sum^{n}_{i=1} e^{x_i}}
-         $$
-
-     -   **Gradient: ** $EntropyLoss = -\ln y_j$
-         $$
-         EntropyLoss'(x) = y_i-1
-         $$
-
-4.   **Leaky ReLU**:
-
-     -   **Function**: 
-         $$
-         f(x)=\{^{x\quad if\ x>0}_{\alpha x\quad if\ x\le0}
-         $$
-         
-     -   **Gradient**: 
-         $$
-         f'(x)=\{^{1\quad if\ x>0}_{\alpha\quad if\ x\le0}
-         $$
-         
-     -   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
-
+-   **Problematic Region**: Leaky ReLU attempts to fix the dying ReLU problem by having a small positive gradient for negative inputs. This means that the gradient is never exactly zero, but if $\alpha$ is very small, the gradient can still be close to zero for negative inputs, potentially slowing down training.
 
 ***COMPARISON***:
 
@@ -202,79 +207,76 @@
 -   **ReLU** has zero gradient for negative inputs, leading to the dying ReLU problem.
 -   **Leaky ReLU** attempts to mitigate the dying ReLU problem but can still have near-zero gradients for negative inputs if $α$ is very small.
 
-5.   **Swish**（ReLU的替代）:
+### **Swish**（ReLU的替代）
 
-     -   **Function**:
-         $$
-         Swish(x)=x\cdot Sigmoid(x)
-         $$
+-   **Function**:
+    $$
+    Swish(x)=x\cdot Sigmoid(x)
+    $$
 
+-   **非单调性**：Swish是一个平滑的、非单调的函数。这与传统的ReLU函数（线性且单调）形成对比。
+-   **有界的负值**：与ReLU不同，Swish函数在负值时不是完全为零，它允许负值通过，这可能有助于保持神经网络中更多的信息流。
+-   **自适应**：通过引入 $\beta$ 参数，Swish函数可以在训练过程中自适应地调整其形状，这在某些情况下可能有助于提升模型性能。
+-   和ReLU相比的优势：
 
-     -   **非单调性**：Swish是一个平滑的、非单调的函数。这与传统的ReLU函数（线性且单调）形成对比。
+    -   **性能提升**：在一系列的基准测试和任务中，Swish函数展示了与ReLU相比在深度网络中的性能提升，尤其是在深度较大的网络结构中。
+    -   **平滑梯度**：Swish函数由于其平滑性质，可以提供更稳定的梯度流，有利于深度学习模型的训练。
+    -   **灵活性**：Swish函数通过参数 $\beta$ 提供了额外的灵活性，这一参数可以根据任务需求进行调整或通过学习得到。
 
-
-     -   **有界的负值**：与ReLU不同，Swish函数在负值时不是完全为零，它允许负值通过，这可能有助于保持神经网络中更多的信息流。
-
-
-     -   **自适应**：通过引入 $\beta$ 参数，Swish函数可以在训练过程中自适应地调整其形状，这在某些情况下可能有助于提升模型性能。
-
-
-     -   和ReLU相比的优势：
-    
-         -   **性能提升**：在一系列的基准测试和任务中，Swish函数展示了与ReLU相比在深度网络中的性能提升，尤其是在深度较大的网络结构中。
-             -   **平滑梯度**：Swish函数由于其平滑性质，可以提供更稳定的梯度流，有利于深度学习模型的训练。
-             -   **灵活性**：Swish函数通过参数 $\beta$ 提供了额外的灵活性，这一参数可以根据任务需求进行调整或通过学习得到。
-
-6.   The **Hyperbolic Tangent (tanh)** is an activation function used in neural networks, including RNNs. It's defined as:
+### tanh (Hyperbolic Tangent)
 
 $$
 tanh(x) = \frac{e^x-e^{-x}}{e^x+e^{-x}}
 $$
--   The function maps any real-valued number to the range −1,1−1,1. Here's what it looks like:
-
--   Graph of tanh(x)Graph of tanh(x)
-
--   The tanh function is zero-centered, meaning that negative inputs will be mapped strongly negative and zero inputs will be near zero in the output. This makes it easier for the model to learn from the backpropagated error and can result in faster training.
-
--   Here are some properties of the tanh activation function:
-    1.  **Non-linear**: This allows the model to learn from the error and make adjustments, which is essential for learning complex patterns.
-    2.  **Output range**: The output values are bound within the range −1−1 and 11, providing normalized outputs.
-    3.  **Zero-centered**: This helps mitigate issues related to the gradients and speeds up the training process.
-
-***COMPARISON:***
-
-### ReLU (Rectified Linear Unit)
-
-1.  **Computational Efficiency**: ReLU is computationally cheaper to calculate than tanh because it doesn't involve any exponential operations. This makes it faster to train large networks.
-2.  **Sparsity**: ReLU activation leads to sparsity. When the output is zero, it's essentially ignoring that neuron, leading to a sparse representation. Sparsity is beneficial because it makes the network easier to optimize.
-3.  **Non-vanishing Gradients**: ReLU doesn't suffer from the vanishing gradient problem for positive values, which makes it suitable for deep networks.
-
-### tanh (Hyperbolic Tangent)
 
 1.  **Zero-Centered**: Unlike ReLU, tanh is zero-centered, making it easier for the model to learn in some cases.
-2.  **Output Range**: The output range of tanh is [−1,1][−1,1], which can be more desirable than [0,∞)[0,∞) for ReLU in certain applications like RNNs.
+2.  **Output Range**: The output range of tanh is \[−1,1\], which can be more desirable than [0,∞)[0,∞) for ReLU in certain applications like RNNs.
 3.  **Vanishing Gradients**: tanh can suffer from vanishing gradients for very large or very small input values, which can slow down learning.
 
-### Context-Specific Usage
+**Context-Specific Usage**
 
 -   **RNNs**: tanh is often used because the zero-centered nature of the function can be beneficial for maintaining the state over time steps.
 -   **CNNs and Fully-Connected Networks**: ReLU is often preferred due to its computational efficiency and because CNNs often deal with larger and deeper architectures where vanishing gradients are less of a concern.
 
 
 
-## Embedding Layers
+## Conditioning
 
-***目的：通过非标签的形式输入条件；把不同条件的影响解耦到输入数据的不同方面（比率&偏差），方便调试模型***
+### Labeling Loss func.
 
-**方式一：**分别以scalar和bias的形式把两个条件张量在同一层嵌入数据（一般在Normalization后）
+以标签的形式输入条件，即只通过网络输出和标签值之间的损失函数来约束模型的优化
 
->   例：
->   $$
->   AdaGN(h,y)=y_s\cdot GroupNorm(h)+y_b
->   $$
->   $y=[y_s,y_b]$， $y_s$ 是时间步嵌入张量， $y_b$ 是类别标签嵌入张量， $h$ 是前一层卷积层的结果
+### Concatenation & Addition
 
-**方式二：**在不同层以scalar（或bias）的形式把多个条件张量（两个以上）依次嵌入数据（一般在Normalization后）
+#### Same dim.  =>  layer concatenation
+
+如果条件和训练数据形状相同（如都是图片），可以直接在输入训练数据时把条件拼接在数据的通道维度上一并输入（参考Pix2Pix的Discriminator）
+
+#### Different dim.  =>  encode (project) -> tensor addition 
+
+如果条件和训练数据形状不同（如图片和时间步向量），则需要将时间步向量编码（可用Transformer）成和图片一样的形状，再直接张量相加到图片上一并输入（参考DDPM的Unet）
+
+### Scale & Bias  (Adaptive Normalization)
+
+**用法：**
+$$
+X = C_s\cdot [Instance|Batch|Group|Layer]Norm+C_b
+$$
+其中 $C_s = Linear(cond_1)$ ， $C_b=Linear(cond2)$ 。
+
+-   **若只有一个条件但不知道设为 scalar 还是 bias，则可以两个都设，让模型自己学习（参考Semantic Diffusion Guidance的CLIP的AdaBN时间步嵌入）** 
+
+-   ***若有两个条件，就把不同条件的影响解耦到输入数据的不同方面（比率&偏差），方便调试模型，具体哪个做 scalar 哪个做 bias 可以轮流尝试效果（参考Classifier Diffusion Guidance的DDPM的Unet的残差块的AdaGN时间步和类别标签嵌入）****
+
+    **方式一：**分别以scalar和bias的形式把两个条件张量在同一层嵌入数据（一般在Normalization后）
+
+    >   例：
+    >   $$
+    >   AdaGN(h,y)=y_s\cdot GroupNorm(h)+y_b
+    >   $$
+    >   $y=[y_s,y_b]$， $y_s$ 是时间步嵌入张量， $y_b$ 是类别标签嵌入张量， $h$ 是前一层卷积层的结果
+
+    **方式二：**在不同层以scalar（或bias）的形式把多个条件张量（两个以上）依次嵌入数据（在Normalization后）
 
 
 

@@ -370,13 +370,22 @@ WGAN-GP：
 
 与 *<u>likelihood</u>* 区分，一般 *<u>likelihood</u>* 指概率分布间的似然度，<u>similarity</u> 指数据本身间的相似度
 
-### CLIP's CosineSim.(Content-similarity)
+### CosineSim.(Content-similarity)
 
+计算两个形状相同的向量的方向的一致性
 $$
 CosineSim. = Encoder_{image}(X_t,t)\cdot Encoder_{language}(l)
 $$
 
-### Gram Matrix (Style-similarity)
+$$
+CosineDistance=1-\frac{A\cdot B}{||A||||B||}
+$$
+
+
+
+### Gram Matrix Style-similarity
+
+计算两个形状相同的矩阵的纹理风格（各自内部横竖向量之间的分布关系）的一致性
 
 https://www.cnblogs.com/yifanrensheng/p/12862174.html
 $$

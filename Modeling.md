@@ -240,23 +240,33 @@ $$
 
 
 
-## Conditioning
+## Conditioning (Supervising)
 
-### Labeling Loss func.
+****
 
-以标签的形式输入条件，即只通过网络输出和标签值之间的损失函数来约束模型的优化
+### As Loss Target
 
-### Concatenation & Addition
+只通过网络输出和标签值之间的损失函数来约束模型的优化（施加模型条件）
 
-#### Same dim.  =>  layer concatenation
+**微调（Fine-tune）：**在预训练模型的基础上**对生成（采样）结果添加带条件的损失值再继续训练**，不用重新训练预测噪声的模型（参考<u>DiffusionCLIP</u>）
+
+****
+
+### As Input
+
+***必须重新训练Unet，条件和样本的成对数据***
+
+#### Concatenation & Addition
+
+##### Same dim.  =>  layer concatenation
 
 如果条件和训练数据形状相同（如都是图片），可以直接在输入训练数据时把条件拼接在数据的通道维度上一并输入（参考Pix2Pix的Discriminator）
 
-#### Different dim.  =>  encode (project) -> tensor addition 
+##### Different dim.  =>  encode (project) -> tensor addition 
 
-如果条件和训练数据形状不同（如图片和时间步向量），则需要将时间步向量编码（可用Transformer）成和图片一样的形状，再直接张量相加到图片上一并输入（参考DDPM的Unet）
+如果条件和训练数据形状不同（如图片和时间步向量），则需要将时间步向量编码（可用Transformer）成和图片一样的形状，再直接张量相加到图片上一并输入（参考DDPM把时间步输入Unet、<u>Classifier-free</u>把类别标签输入Unet）
 
-### Scale & Bias  (Adaptive Normalization)
+#### Scale & Bias  (Adaptive Normalization)
 
 **用法：**
 $$
@@ -277,6 +287,17 @@ $$
     >   $y=[y_s,y_b]$， $y_s$ 是时间步嵌入张量， $y_b$ 是类别标签嵌入张量， $h$ 是前一层卷积层的结果
 
     **方式二：**在不同层以scalar（或bias）的形式把多个条件张量（两个以上）依次嵌入数据（在Normalization后）
+
+****
+
+### As Guidance
+
+***无须重新训练Unet***
+
+另外训练一个分类器（一般分类器或CLIP），用**分类结果的损失值对输入的梯度**带权重地调整Unet预测的噪声，从而**改变采样结果的分布**
+
+1.  <u>Classifier Guidance</u>（一般分类器，只支持标签条件）
+2.  <u>Semantic Guidance</u>（CLIP，支持文本条件、图像条件）
 
 
 

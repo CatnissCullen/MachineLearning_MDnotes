@@ -22,3 +22,8 @@
 ### DDPM
 
 ### DDIM
+
+### Improved DDPM
+
+## CLIP
+

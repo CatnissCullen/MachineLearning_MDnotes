@@ -254,6 +254,8 @@ $$
 
 ### As Input
 
+把条件连同输入一起 *feed forward*
+
 ***必须重新训练Unet，条件和样本的成对数据***
 
 #### Concatenation & Addition

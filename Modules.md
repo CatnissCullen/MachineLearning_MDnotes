@@ -4,55 +4,141 @@
 
 
 
+## FC/ MLP (Multilayer Perception)/ Feed Forward
+
+input ➡️ **\[** ***Prj. (Linear; Affine)*** + ***Activate*** **\]** \* N + ***Prj. (Linear; Affine)*** ➡️ output
+
+**用于分类** 
+
+-    **\[** ***Prj. (Linear; Affine)*** + ***Activate*** **\]** -- *Hidden Layer*
+
+***e.g. Stable Diffusion 的 Unet 中 `BasicTransformerBlock` 中的 `FeedForward`***
+
+<img src="./img/FeedForward.png" alt="FeedForward" style="zoom:33%;" />
+
+```python
+class FeedForward(nn.Module):
+    def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.):
+        super().__init__()
+        inner_dim = int(dim * mult)
+        dim_out = default(dim_out, dim)
+        project_in = nn.Sequential(
+            nn.Linear(dim, inner_dim),
+            nn.GELU()
+        ) if not glu else GEGLU(dim, inner_dim)
+
+        self.net = nn.Sequential(
+            project_in,
+            nn.Dropout(dropout),
+            nn.Linear(inner_dim, dim_out)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+```
+
+
+
+## CNN
+
+input ➡️ ***Norm.*** + ***Activate*** + (Dropout) + ***Conv.*** ➡️ output
+
+**用于对图片进行特征抽象/ 特征提取**
+
+***输入图片到整个模型后一般会先单独加一个 Conv. （叠起来后是和先线性再激活的模式能对上的）*** 
+
+***e.g. Diffusion (GSC_block)***
+
+<img src="./img/image-20240628215926083.png" alt="image-20240628215926083" style="zoom: 33%;" />
+
+```python
+""" conv input X (GSC block)"""
+self.block['conv1'] = nn.Sequential(
+			nn.GroupNorm(self.groups, self.in_chan),
+			nn.SiLU(),
+			nn.Conv2d(self.in_chan, self.out_chan, self.F1, self.S1, self.P1))
+
+""" conv (X + t) """
+		self.block['conv2'] = nn.Sequential(
+			nn.GroupNorm(self.groups, self.out_chan),
+			nn.SiLU(),
+			nn.Dropout(self.drop_rate),
+			nn.Conv2d(self.out_chan, self.out_chan, self.F1, self.S1, self.P1))
+```
+
+
+
 ## Residual
 
 **前层的输入按元素相加（各维度大小必须相同）到后层的输出再进行激活**（基础形式是每 n 层与n+1层间都有连接）
 
  <img src="images/image-20240208173612543.png" alt="image-20240208173612543" style="zoom: 33%;" />
 
- **⭐可保证后层网络函数空间一定覆盖前层网络函数空间，以减小模型方差，防止神经网络退化，允许网络深度大幅增加（但也更耗时）；附带好处：防止梯度消失**
+ **⭐可保证后层网络函数空间一定覆盖前层网络函数空间，以减小模型方差，防止神经网络退化，允许网络深度大幅增加（但也更耗时）；附带好处：防止梯度消失** 
+
+***e.g. Diffusion (with time embedding)***
+
+![ResBlock](./img/ResBlock.png)
 
 
 
-## Self-attention
+## Self-attention & Cross-attention
 
-***CNN 是 Self-attention 的特例！！！！！！！！！！***
+**从数据（一张图片 | 一句文本）中提取查询矩阵 Q （一个数据分片一个向量 q ），以及键矩阵 K （一个数据分片一个向量 k ），还有值矩阵 V （一个数据分片一个向量 v ），进行注意力机制计算，输出 K/ V 来源数据的各数据分片对于单个 q 查询的贡献度（ SoftMax权重 \* v ）之和排列成的矩阵**
 
-**Self-attention是transformer的特例！！！！！！！（input序列的元素各与一个output序列元素对应）**
+==**Attention （注意力度）即 SoftMax 权重**==  
 
-自注意力机制（Self-Attention）原本在自然语言处理领域非常受欢迎，但也已经开始在计算机视觉领域发挥作用，具体的应用形式可能有所不同，但核心思想都是对输入的各个部分赋予不同的注意力权重。
+-   **Self_Attn ： Q 、 K 、 V 来自同一数据，求解数据内部各数据分片对整个数据的整体内容的贡献度**
+-   **Cross_Attn ： Q 、 K 、 V 来自不同数据，求解一个数据内部各数据分片对另一个数据的整体内容的贡献度**
 
-试想我们正在观看一张图片，我们的视线并不是平均分布在整个图片上，而是会集中在一些我们认为更重要的地方，比如人物的脸部，或者是图片中的主要物体。这种行为实际上是一种自然而然的注意力机制，我们关注某些部分多于其他部分。自注意力机制就是试图模拟这种行为，让计算机模型也能“聚焦”于输入的关键部分。
+***e.g. Stable Diffusion 的 Unet 中在引入条件用的 `BasicTransformerBlock` 中的 `CrossAttention` ，实际封装在 `BasicTransformerBlock` 中使用*** 
 
-在计算机视觉中，自注意力可以用于捕捉图像中长距离的依赖关系。比如在一张人物照片中，虽然眼睛和嘴巴在空间位置上可能相距较远，但它们之间存在很强的语义关联。传统的卷积神经网络（CNN）由于其局部感受野的特性，可能难以捕捉这种长距离的关系，而自注意力机制能有效解决这个问题。
+<img src="./img/image-20240630143845258.png" alt="image-20240630143845258" style="zoom: 25%;" />
 
-一个具体的例子是"Vision Transformer"（ViT）模型，这个模型是基于Transformer（一种主要使用自注意力机制的模型结构）设计的，它将图像划分为一系列的小块，然后像处理文本那样处理这些小块。通过这种方式，ViT可以把注意力放在图像中最重要的部分，从而提高模型的预测性能。
+```python
+class CrossAttention(nn.Module):
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
+        super().__init__()
+        inner_dim = dim_head * heads
+        context_dim = default(context_dim, query_dim)
 
-总的来说，自注意力机制在计算机视觉中的应用是一种很有前景的研究方向，它能帮助模型关注到图像中最重要的部分，从而提高模型的性能。
+        self.scale = dim_head ** -0.5
+        self.heads = heads
 
-**Self-attention下游应用：https://www.youtube.com/watch?v=yHoAq1IT_og （包括Transformer）**
+        self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
+        self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
+        self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-**Full attention**通常指的是在自注意力（Self-Attention）机制中，序列的每个元素都与序列中的其他所有元素进行注意力计算的过程。尽管full attention机制在处理序列数据方面非常强大，但其在处理非常长的序列时面临计算和内存的挑战。为了解决这些问题，研究人员提出了多种优化方法，如Sparse Attention和Local Attention，以及近年来的Efficient Attention或Linear Attention等，旨在减少计算和内存成本，同时尽可能保持模型性能。
+        self.to_out = nn.Sequential(
+            nn.Linear(inner_dim, query_dim),
+            nn.Dropout(dropout)
+        )
 
+    def forward(self, x, context=None, mask=None):  # context=None => SelfAttn
+        h = self.heads
 
+        q = self.to_q(x)
+        context = default(context, x)  # context==None => context=x (self attention)
+        k = self.to_k(context)
+        v = self.to_v(context)
 
-## Global-attention
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
-全局注意力层（Global Attention Layer）是一种注意力机制，用于模型中对全局信息进行加权和聚焦。在深度学习的上下文中，注意力机制允许模型在处理输入数据时对某些部分给予更多的关注。全局注意力层特别设计用于捕捉和利用整个输入数据的全局依赖关系，而不仅仅是局部信息。这意味着模型可以在做出决策时考虑到所有输入信息的上下文，从而提高处理复杂数据（如图像、文本等）的能力。全局注意力层在提高模型的理解和生成能力方面尤为有效，常见于需要高级别理解和综合全局信息的任务中。
+        sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
 
-与全局注意力相比，自注意力特别关注输入序列内部的关系，而全局注意力层更侧重于在整个输入数据范围内捕捉信息。虽然二者都能处理全局信息，但自注意力特别适用于序列数据，能够为序列中的每个元素分配不同的关注度。在实际应用中，这两种注意力机制可以相互补充，共同提高模型处理复杂数据的能力。
+        if exists(mask):
+            mask = rearrange(mask, 'b ... -> b (...)')
+            max_neg_value = -torch.finfo(sim.dtype).max
+            mask = repeat(mask, 'b j -> (b h) () j', h=h)
+            sim.masked_fill_(~mask, max_neg_value)
 
+        # attention, what we cannot get enough of
+        attn = sim.softmax(dim=-1)
 
-
-## Cross-attention
-
-<img src="images/image-20230726132533226.png" alt="image-20230726132533226" style="zoom:50%;" />
-
-<img src="images/image-20230726132832992.png" alt="image-20230726132832992" style="zoom:50%;" />
-
-交叉注意力（Cross-Attention）是一种注意力机制，用于在两个不同的序列或数据集之间建立关联，比如在机器翻译中，将一个语言的句子与另一个语言的句子对应起来。它允许模型在处理一个序列时，参考另一个序列的信息，从而增强其理解和生成的能力。
-
-与自注意力（Self-Attention）和全局注意力（Global Attention）的区别在于，自注意力关注于序列内部元素之间的关系，全局注意力关注于捕捉整个输入范围的全局依赖关系，而交叉注意力则专注于两个不同序列或数据集之间的关联。这三者都是提高模型对复杂数据处理能力的有效机制，但各自适用于不同的场景和目的。
+        out = einsum('b i j, b j d -> b i d', attn, v)
+        out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+        return self.to_out(out)
+```
 
 
 

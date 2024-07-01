@@ -53,6 +53,11 @@
 
 ***中心化 + 比例缩放 => 标准化***
 
+-   **在必须计算数量的总影响值（“数量×个体影响力”）中规范掉 “数量” 的影响** 
+-   **在不同的量纲范围中规范掉数值变化范围限制不同的影响**
+
+***将不具可比性的东西变得可比！原始理解 => 决策树的 C4.5 方法中用分母上的 IV 值消除属性上取值数目对节点净化力度的影响***
+
 >   **Normalization** is a general term that refers to the process of transforming data **into a standard or common scale**. It's often used to describe various techniques that make data more comparable and interpretable by algorithms.
 >
 >   --- *GPT4*

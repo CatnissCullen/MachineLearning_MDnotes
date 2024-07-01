@@ -793,7 +793,7 @@ https://cs231n.github.io/convolutional-networks/#conv
 
 -   专用于图像数据（3维矩阵），<u>网络内部保持3维的矩阵格式</u>
 
--   如要支持任意大小的图像输入而不改变模型超参数，需要前置 **Spatial Transformer Network** 
+-   如要支持任意大小的图像输入而不改变模型超参数，需要前置 **[Spatial Transformer Network](https://blog.csdn.net/qq_39422642/article/details/78870629)** 
 
 -   据具体问题考虑是否使用 **Pooling**（不是所有数据都能用！！一般图像可以）
 

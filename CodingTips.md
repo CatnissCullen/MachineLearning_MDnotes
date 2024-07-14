@@ -633,13 +633,13 @@ def train_model(model: MyModel, batch, loss_mode, optimizer, device, verbose=Fal
 	loss = loss_opt(loss_mode)
 
 	# Forward pass
-	model.zero_grad()
 	learnt_scores = model(<input_batch>)
 	if verbose: print("Learn scores of real imgs. done.")
 	real_scores = torch.ones(learnt_scores.size()).to(device)  # a tensor of '1's
 	loss = loss(learnt_scores, real_scores) if loss_mode != 'W-GAN-GP' else -learnt_scores.mean() # this is average loss of the input batch!!
     # do the same with scoring of other image classes to classify 
 	if verbose: print("Got loss of real_img scores: ", loss) # usually only print out the loss of the model after an epoch of trainings
+	optimizer.zero_grad()
 	loss.backward()
 	optimizer.step()
 	return loss.data.item()
@@ -694,16 +694,19 @@ for e in range(e_num):  # iter. epochs
 		b_loss.append(train_loss) # collect batch-loss to batch-losses list
          tol_loss += train_loss
     batch_num = b
+    
     # validation
+    val_losses = 0
+    b = 0
 	model.eval()
     with torch.no_grad():
-        b = 0
         for batch in val_batches:
             b += 1
             val_loss = model(batch)
-	if min_loss is None or val_loss < min_loss: 
+            val_losses += val_loss
+	if min_loss is None or val_losses / b < min_loss: 
          # update minimum loss
-         min_loss = val_loss
+         min_loss = val_losses / b
          # save model when it reaches lower loss
          my_utilities.save_model_chk_point(
 			checkpoints_dir, e + 1,

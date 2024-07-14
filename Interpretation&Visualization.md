@@ -8,7 +8,7 @@
 
 ### FID
 
-**captures both fidelity & diversity**
+**captures diversity (distribution's similarity)**
 
 越小越好
 
@@ -26,6 +26,12 @@
 ### sFID
 
 **better spatial relationship**
+
+### IS 
+
+**captures fidelity of a single image**
+
+越大越好
 
 ### Precision、Inception Score
 

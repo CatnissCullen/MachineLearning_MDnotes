@@ -84,7 +84,7 @@ self.block['conv1'] = nn.Sequential(
 
 ## Self-attention & Cross-attention
 
-**从数据（一张图片 | 一句文本）中提取查询矩阵 Q （一个数据分片一个向量 q ），以及键矩阵 K （一个数据分片一个向量 k ），还有值矩阵 V （一个数据分片一个向量 v ），进行注意力机制计算，输出 K/ V 来源数据的各数据分片对于单个 q 查询的贡献度（ SoftMax权重 \* v ）之和排列成的矩阵**
+**从数据（一张图片 | 一句文本）中提取查询矩阵 Q （一个数据分片一个向量 q ，每个 q 维度为 $d_k$ ），以及键矩阵 K （一个数据分片一个向量 k ，每个 k 维度为 $d_k$ ），还有值矩阵 V （一个数据分片一个向量 v ，每个 v 维度为 $d_v$ ），进行注意力机制计算，输出 K/ V 来源数据的各数据分片对于单个 q 查询的贡献度（ SoftMax权重 \* v ）之和排列成的矩阵**
 
 ==**Attention （注意力度）即 SoftMax 权重**==  
 
@@ -93,7 +93,7 @@ self.block['conv1'] = nn.Sequential(
 
 ***e.g. Stable Diffusion 的 Unet 中在引入条件用的 `BasicTransformerBlock` 中的 `CrossAttention` ，实际封装在 `BasicTransformerBlock` 中使用*** 
 
-<img src="./img/image-20240630143845258.png" alt="image-20240630143845258" style="zoom: 25%;" />
+<img src="./img/image-20240630143845258.png" alt="image-20240630143845258" style="zoom: 50%;" />
 
 ```python
 class CrossAttention(nn.Module):

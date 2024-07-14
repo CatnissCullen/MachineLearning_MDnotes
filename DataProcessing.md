@@ -23,7 +23,11 @@
 
 -   以图片本身为sample，用数字编码命名图片作为label
 
--   在输入模型前需要设置 Spatial Transformer Layer 学习如何将图片大小和方向统一（see **<u>Spatial Transformer Layer</u>**）
+-   cv2 库的读入格式是 BGR 通道的 (h, w, 3) 形状的 ndarray ， pillow 库读入的是 RGB 格式的 PillowImage
+
+-   uint8 的范围是 [0, 255] ，用于图像处理，float32 用于输入模型进行计算
+
+-   如果图片大小不一致，在输入模型前需要设置 Spatial Transformer Layer 学习如何将图片大小和方向统一（see **<u>Spatial Transformer Layer</u>**）
 
 -   看作 3 维矩阵（RGB Channels、长度、宽度）输入CNN，输入全连接网络前拉直（flatten）成一维向量（具体见卷积神经网络 goodnotes）
 

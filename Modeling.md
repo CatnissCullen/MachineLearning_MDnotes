@@ -127,7 +127,7 @@
 
 ### More layers
 
-深度网络的本质就是一个核函数，网络层的作用就是将低维线性函数变换到高维线性函数。
+深度网络的本质作用就是将低维线性函数变换到高维线性函数。
 
 但即便有了变换到高维的网络层，也不一定能成功分类，因为有的超平面分界在其所在高维空间内也很难被找到，因此需要增加网络层进一步在同维空间内变换或变换到更高维空间，以此更好拉开被分类的两类数据点（向量）之间的距离。
 
@@ -138,6 +138,70 @@
 ![61bd22ff661aafa4a228822423f6091](images/61bd22ff661aafa4a228822423f6091.jpg)
 
 解决深层网络偏差的问题（网络退化）及梯度消失问题使用 ResNet，详见 **<u>Evaluation (of Generalization --- the closeness to ground-truth) & Solutions</u>**
+
+
+
+## Normalization
+
+### Batch Normalization (BatchNorm)
+- **作用**：对 batch 内的激活进行归一化。
+- **公式**：
+  $$
+  \hat{x} = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}
+  $$
+- **优点**：加速训练，减少梯度消失。
+- **缺点**：对小批量数据效果较差。
+
+### Layer Normalization (LayerNorm)
+- **作用**：对每个样本的所有神经元进行归一化，常用于 RNN 和 Transformer。
+- **公式**：
+  $$
+  \hat{x} = \frac{x - \mu_L}{\sqrt{\sigma_L^2 + \epsilon}}
+  $$
+- **优点**：适用于序列模型。
+- **缺点**：在卷积网络中效果不如 BatchNorm。
+
+### Instance Normalization (InstanceNorm)
+- **作用**：对每个样本的每个通道分别进行归一化，常用于风格迁移任务。
+- **公式**：
+  $$
+  \hat{x} = \frac{x - \mu_{instance}}{\sqrt{\sigma_{instance}^2 + \epsilon}}
+  $$
+- **优点**：在风格迁移中表现优秀。
+- **缺点**：对分类任务的提升有限。
+
+### Group Normalization (GroupNorm)
+- **作用**：将通道分组，对每组通道进行归一化，适用于小批量数据。
+- **公式**：
+  $$
+  \hat{x} = \frac{x - \mu_G}{\sqrt{\sigma_G^2 + \epsilon}}
+  $$
+- **优点**：适合小批量卷积神经网络训练。
+- **缺点**：需要选择合适的分组方式。
+
+### Weight Normalization
+- **作用**：对神经网络权重进行归一化，加速优化。
+- **公式**：
+  $$
+  w = g \cdot \frac{v}{||v||}
+  $$
+  其中，\( g \) 是可学习的缩放因子，\( v \) 是权重向量。
+- **优点**：加速训练，减少梯度爆炸。
+- **缺点**：与 BatchNorm 相比，效果可能稍逊。
+
+### LayerScale
+- **作用**：对 Transformer 模块的输出进行缩放，增强网络稳定性。
+- **优点**：提高深层网络的稳定性。
+- **缺点**：较为新颖，应用范围有待进一步研究。
+
+### RMSNorm (Root Mean Square Layer Normalization)
+- **作用**：减少计算均值的依赖，仅依赖于方差平方根进行归一化。
+- **公式**：
+  $$
+  \hat{x} = \frac{x}{\sqrt{\frac{1}{d} \sum_{i=1}^{d} x_i^2 + \epsilon}}
+  $$
+- **优点**：减少计算复杂度。
+- **缺点**：某些情况下效果不如 LayerNorm。
 
 
 
@@ -186,10 +250,7 @@
     f(x_j) = \frac{e^{x_j}}{\sum^{n}_{i=1} e^{x_i}}
     $$
 
--   **Gradient: ** $EntropyLoss = -\ln y_j$
-    $$
-    EntropyLoss'(x) = y_i-1
-    $$
+-   **Gradient: ** 雅可比矩阵
 
 ### Leaky ReLU
 
@@ -294,16 +355,22 @@ $$
 
     **方式二：**在不同层以scalar（或bias）的形式把多个条件张量（两个以上）依次嵌入数据（在Normalization后）
 
+#### Through a new module
+
+-   <u>IP-adapter</u>
+-   <u>ControlNet</u>
+
 ****
 
 ### As Guidance
 
-***无须重新训练Unet***
+***指扩散模型中通过调整预测噪声来引导分布变化的梯度；无须重新训练Unet*** 
 
 另外训练一个分类器（一般分类器或CLIP），用**分类结果的损失值对输入的梯度**带权重地调整Unet预测的噪声，从而**改变采样结果的分布**
 
-1.  <u>Classifier Guidance</u>（一般分类器，只支持标签条件）
-2.  <u>Semantic Guidance</u>（CLIP，支持文本条件、图像条件）
+1.  <u>Classifier Guidance</u>（使用一般分类器，只支持标签条件）
+2.  <u>Semantic Guidance</u>（使用CLIP，支持文本条件、图像条件）
+3.  <u>Classifier-free Guidance</u>（不使用分类器，支持文本条件、标签条件的嵌入）
 
 
 
@@ -466,6 +533,16 @@ https://www.zhihu.com/question/347358336
 ![0971bf528ff500b33469ba7387ac3c8](images/image-20240209153821466.png)
 
 
+
+## Inductive Bias
+
+**人为根据对现实世界可见数据的理解，归纳出一定规律，并在建模时作为先验知识引入这样的规律，给模型一个“价值观”，使模型不会在有限数据中学习出过拟合的规律，增加泛化能力（否则可见训练集就是模型唯一的可学习规律来源，容易过拟合）**
+
+**引入形式：模型架构（如 CNN 、 Transformer）或损失函数及其正则项**
+
+>   举例：CLIP就是一种从损失函数引入Inductive Bias的方法，并且是representational Inductive Bias（CLIP作为用带有Inductive Bias的损失函数预训练的表示学习器，冻结后放到生成模型下游用于计算损失提供/引入Inductive Bias到生成模型）
+
+ 
 
 ## Deal With Over-fitting
 

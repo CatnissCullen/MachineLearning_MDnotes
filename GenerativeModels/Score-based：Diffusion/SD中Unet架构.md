@@ -24,9 +24,15 @@
 
 ![BasicTransformerBlock](./img/BasicTransformerBlock.png)
 
+<u>***BasicTransformerBlock 即 Basic ViT Block***</u> 
+
 ![SpatialTransformer](./img/SpatialTransformer.png)
 
+<u>***BasicTransformerBlock 可叠加多次***</u> 
+
 ![Conditioned_DownBlock](./img/Conditioned_DownBlock.png)
+
+<u>***也可以用简单的 Attention 而不用 Spatial Transformer***</u>  
 
 <img src="./img/DownBlock.png" alt="DownBlock" style="zoom:33%;" />
 
@@ -47,3 +53,14 @@
 代码解读见：[https://nn.labml.ai/diffusion/stable_diffusion/model/unet_attention.html ](https://nn.labml.ai/diffusion/stable_diffusion/model/unet_attention.html) 
 
 ![SD_Unet](./img/SD_Unet.png)
+
+![image-20240918160852126](./img/image-20240918160852126.png)
+
+>   **the U-Net has three main stages: down-stage, mid-stage, and up-stage.** 
+>
+>   -   The down-stage reduces the resolution of activations, 
+>   -   while the up-stage increases it. 
+>
+>   Both stages contain multiple resolutions, in each of which the activations share the same resolution. Furthermore, <u>each resolution includes several modules, including **ResModule** (convolutional ResNet structures), **ViT Module**, and **Downsampler/Upsampler** (simple convolutional layers)</u>.  
+>
+>   *--- 《Not All Diffusion Model Activations Have Been Evaluated as Discriminative Features》*

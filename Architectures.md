@@ -91,6 +91,8 @@ Transformer模型由于其强大的性能和灵活性，不仅在NLP中得到广
 
 因此，尽管最初 Transformer 是为了解决自然语言处理任务而设计的，但其在计算机视觉中也展现出了强大的潜力，已经在许多领域得到了应用。
 
+
+
 ## CLIP
 
 使用一个Encoder或Image Transformer作为图片的编码器、一个Text Transformer作为文本的编码器，输入匹配的图片和文本，将它们编码为对齐到同一空间的同一方向上的latent。
@@ -100,3 +102,14 @@ Transformer模型由于其强大的性能和灵活性，不仅在NLP中得到广
 上游可对接图像生成模型的输出和新的文本作为输入，通过CLIP损失值控制条件生成图片。
 
 下游也可对接图像生成模型，输入文本latent生成新图片latent，再通过新图片latent和CLIP输出的图片间的损失值控制条件生成图片。
+
+
+
+## ViT Basic Block
+
+https://hackmd.io/@YungHuiHsu/ByDHdxBS5#Transformer_CV-Vision-TransformerViT%E9%87%8D%E9%BB%9E%E7%AD%86%E8%A8%98
+
+**LayerNorm + Multi-Head Self-Attention + LayerNorm + Feed-Forward Network + Residual Connections** 
+
+![image-20241012151948843](./img/image-20241012151948843.png)
+

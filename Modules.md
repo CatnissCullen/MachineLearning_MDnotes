@@ -74,7 +74,7 @@ self.block['conv1'] = nn.Sequential(
 
  <img src="images/image-20240208173612543.png" alt="image-20240208173612543" style="zoom: 33%;" />
 
- **⭐可保证后层网络函数空间一定覆盖前层网络函数空间，以减小模型方差，防止神经网络退化，允许网络深度大幅增加（但也更耗时）；附带好处：防止梯度消失** 
+ **⭐可保证后层网络函数空间一定覆盖前层网络函数空间，以减小模型方差，防止神经网络退化（非恒等映射），允许网络深度大幅增加（但也更耗时）；附带好处：防止梯度消失** 
 
 ***e.g. Diffusion (with time embedding)***
 
@@ -84,7 +84,11 @@ self.block['conv1'] = nn.Sequential(
 
 ## Self-attention & Cross-attention
 
+https://zhuanlan.zhihu.com/p/380892265
+
 **从数据（一张图片 | 一句文本）中提取查询矩阵 Q （一个数据分片一个向量 q ，每个 q 维度为 $d_k$ ），以及键矩阵 K （一个数据分片一个向量 k ，每个 k 维度为 $d_k$ ），还有值矩阵 V （一个数据分片一个向量 v ，每个 v 维度为 $d_v$ ），进行注意力机制计算，输出 K/ V 来源数据的各数据分片对于单个 q 查询的贡献度（ SoftMax权重 \* v ）之和排列成的矩阵**
+
+![image-20240913163835083](./img/image-20240913163835083.png)
 
 ==**Attention （注意力度）即 SoftMax 权重**==  
 
@@ -167,3 +171,26 @@ def pe(p, d): # p为位置坐标，d为编码向量的长度，通常和位置�
 
 
 
+## Control
+
+<img src="./img/image-20240907164200378.png" alt="image-20240907164200378" style="zoom: 67%;" />
+
+***相当于在网络块维度上的一种有条件外推*** 
+
+>   To add a ControlNet to such a block we lock the original block and create a trainable copy and connect them together using zero convolution layers, i.e., 1 × 1 convolution with both weight and bias initialized to zero. Here c is a conditioning vector that we wish to add to the network, as shown in (b). 
+
+>   When this structure is applied to large models like Stable Diffusion, **the locked parameters preserve the production-ready model trained with billions of images**, while the trainable copy **reuses such largescale pretrained model to establish a deep, robust, and strong backbone for handling diverse input conditions**.
+
+>   In the first training step, since both the weight and bias parameters of a zero convolution layer are initialized to zero, both of the terms in Equation (2) evaluate to zero, and
+>   $$
+>   y_c=y
+>   $$
+>   In this way, **harmful noise cannot influence the hidden states of the neural network layers in the trainable copy when the training starts**. Moreover, since Z(c;Θz1) = 0 and the trainable copy also receives the input image x, **the trainable copy is fully functional and retains the capabilities of the large, pretrained model allowing it to serve as a strong backbone for further learning**.
+
+***如何使条件图片适应 latent space 大小：***
+
+>   We first convert each input conditioning image (e.g., edge, pose, depth, etc.) from an input size of 512 × 512 into a 64 × 64 feature space vector that matches the size of Stable Diffusion. In particular, we use a tiny network $E(·) $ of four convolution layers with 4 × 4 kernels and 2 × 2 strides (activated by ReLU, using 16, 32, 64, 128, channels respectively, initialized with Gaussian weights and trained jointly with the full model) to encode an image-space condition $c_i$ into a feature space conditioning vector $c_f$ as,
+>   $$
+>   c_f = E(c_i)
+>   $$
+>   The conditioning vector $c_f$ is passed into the ControlNet.
